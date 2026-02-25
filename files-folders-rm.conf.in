@@ -19,8 +19,8 @@ FOLDER_TARGET="/home/.backup/mysql/"
 NAME_PART="$(date +%y%m%d*)" 
 MODE_SWITCH=1
 FOLDER_DEEP=1
-SYS_LOG="/tmp/bash/$file_name_sys.log"
-JOB_LOG="/tmp/bash/$file_name_job.log"
+SYS_LOG="/tmp/bash/${file_name}_sys.log"
+JOB_LOG="/tmp/bash/${file_name}_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

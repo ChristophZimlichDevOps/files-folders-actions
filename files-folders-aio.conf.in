@@ -37,8 +37,8 @@ SCRIPT_SUB_FILE_FOLDERS_RENAME="folders-folders-rename.sh"
 SCRIPT_SUB_FILE_FOLDERS_RM="folders-folders-rm.sh"
 RECREATE_FOLDER_SWITCH=1
 SCRIPT_PATH="$HOME/bin/linux/shell/files-folders-actions/"
-SYS_LOG="/tmp/bash/$file_name_sys.log"
-JOB_LOG="/tmp/bash/$file_name_job.log"
+SYS_LOG="/tmp/bash/${file_name}_sys.log"
+JOB_LOG="/tmp/bash/${file_name}_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

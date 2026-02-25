@@ -13,8 +13,8 @@
 
 PID_PATH_FULL="/var/run/$file_name.pid"
 PID_PROCESS_ID=$$
-SYS_LOG="/tmp/bash/$file_name_sys.log"
-JOB_LOG="/tmp/bash/$file_name_job.log"
+SYS_LOG="/tmp/bash/${file_name}_sys.log"
+JOB_LOG="/tmp/bash/${file_name}_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 
