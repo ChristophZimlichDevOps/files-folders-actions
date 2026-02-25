@@ -76,6 +76,17 @@ set -o allexport
 . "$config_file_in"
 set +o allexport
 
+# Check if $run_as_user_name:$run_as_group_name have write access to log FILEs
+if [ ! -w "${SYS_LOG%/*}" ] || [[ ! -w "${JOB_LOG%/*}" && "$OUTPUT_SWITCH" -eq '0' ]]; then
+    if [ ! -w "${SYS_LOG%/*}" ]; then
+        echo "$run_as_user_name:$run_as_group_name don't have write access for syslog FILE $SYS_LOG."
+    fi
+    if [ ! -w "${JOB_LOG%/*}" ] && [ "$OUTPUT_SWITCH" -eq '0' ]; then
+        echo "$run_as_user_name:$run_as_group_name don't have write access for job log FILE $JOB_LOG."
+    fi
+    echo "Please check the job config FILE $config_file_in. EXIT";exit 2
+fi
+
 # Set log files
 if [ ! -f "$SYS_LOG" ]; then
 	sys_log_file_missing_switch=1
