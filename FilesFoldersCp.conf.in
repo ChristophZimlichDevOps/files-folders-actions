@@ -1,0 +1,34 @@
+### THIS A CONFIG FILE FOR FilesFoldersCp.sh
+## MODIFY IT BEHIND THE = ....NOTHING ELSE
+## DON'T RENAME IT
+
+## Parameter  1: PID full path i.e. "/var/run/$file_name.pid"
+## Parameter  2: Folder Source i.e. "/home/backup/mysql/"
+## Parameter  3: Folder Target i.e. "/tmp/"
+## Parameter  4: Name Part i.e.     "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
+## Parameter  5: Copy Mode Switch   0=Copy only files
+##                                  1=Copy files and folders
+##                                  2=Copy only folders
+## Parameter  6: Script path i.e.   "/root/bin/linux/shell/FilesFoldersActions/"
+## Parameter  7: Script sub i.e.    "FilesFoldersCpPIDCreate.sh"
+## Parameter  8: Sys log i.e.       "/var/log/$file_name.log"
+## Parameter  9: Job log i.e.       "/tmp/$file_name.log"
+## Parameter 10: Output Switch      0=Console
+##                                  1=Log file; Default
+## Parameter 11: Verbose Switch     0=Off
+##                                  1=On; Default
+
+PID_PATH_FULL="/var/run/$file_name.pid"
+FOLDER_SOURCE="/home/.backup/mysql/"
+FOLDER_TARGET="/tmp/"
+NAME_PART="current*" 
+MODE_SWITCH=1
+FOLDER_DEEP_SEARCH=1
+SCRIPT_PATH="/root/bin/linux/shell/FilesFoldersActions/"
+SCRIPT_SUB_FILE_PID_CREATE="FilesFoldersCpPIDCreate.sh"
+SCRIPT_SUB_FILE_PID_RM="FilesFoldersCpPIDRm.sh"
+SYS_LOG="/var/log/bash/$file_name.log"
+JOB_LOG="/tmp/bash/$file_name.log"
+OUTPUT_SWITCH=0
+VERBOSE_SWITCH=1
+

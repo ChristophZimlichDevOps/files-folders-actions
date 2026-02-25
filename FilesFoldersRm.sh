@@ -1,0 +1,299 @@
+#!/bin/bash
+
+## Creator: Christoph Zimlich
+##
+##
+## Summary
+## This script will remove files like you want. Useful for backups for example.
+##
+## Parameter 1: Folder Target i.e. "/home/backup/mysql/"
+## Parameter 2: Name Part i.e. "current*"
+## Parameter 3: Remove Mode Switch "--rm-files-folders"=File(s) and Folder(s) will be deleted
+##				"--rm-folders"=ONLY Folder(s) will be deleted
+##				else i.e. "--rm-files"=ONLY File(s) will be deleted
+## Parameter 4: Remove Files Folders Deep Search "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to remove. MAX VALUE IS 2 for security reason
+## Parameter 5: Output Switch "--logfile"=On...Output to logfile
+##				else=Off...Output to console
+## Parameter 6: Verbose Switch "-v"=On, else=Off
+##
+## Call it like this:
+## sh FilesFoldersRm.sh "/home/.backup/mysql/sub1" "$(date +%y%m%d*)" "0" "1" "0" "1"
+
+## Clear console to debug that stuff better
+#clear
+
+## Enhanced debugging with set -x
+#set -x
+
+## Set Stuff
+version="0.0.1"
+file_name_full="FilesFoldersRm.sh"
+file_name="${file_name_full%.*}"
+
+run_as_user_name=$(whoami)
+run_as_user_uid=$(id -u "$run_as_user_name")
+run_as_group_name=$(id -gn "$run_as_user_name")
+run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
+run_on_hostname=$(hostname -f)
+
+job_config_file="/root/bin/linux/shell/FilesFoldersActions/FilesFoldersRm.conf.in"
+
+## Check this script is running as root !
+if [ "$(id -u)" != "0" ]; then
+	echo "Aborting, this script needs to be run as root! EXIT"
+	exit 1
+fi
+
+## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
+## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
+## is running. If another instance is running we pause for 3 seconds and then delete the PID anyway. Normally this script will run
+## in under 150ms and via cron runs every 60 seconds, so if the PID file still exists after 3 seconds then it's a orphan PID file.
+#if [ -f "$FilesFoldersRmPID" ]; then
+#        sleep 3 #if PID file exists wait 3 seconds and test again, if it still exists delete it and carry on
+#        echo "There appears to be another Process $file_name_full PID $FilesFoldersRmPID is already running, waiting for 3 seconds ..."
+#        rm -f -- "$FilesFoldersRmPID"
+#fi
+#trap 'rm -f -- $FilesFoldersRmPID' EXIT
+#echo $$ > "$FilesFoldersRmPID"
+
+## Clear used stuff
+declare    FOLDER_TARGET
+declare    NAME_PART
+declare	   MODE_SWITCH
+declare    FOLDER_DEEP
+declare -i OUTPUT_SWITCH
+declare -i VERBOSE_SWITCH
+## Clear stuff need for processing
+declare -i job_log_file_missing_switch
+declare -i sys_log_file_missing_switch
+declare    files_string_full
+declare -a files
+declare    folders_string_full
+declare -a folders
+declare -i status
+
+## Import stuff from config FILE
+set -o allexport
+. $job_config_file
+set +o allexport
+
+## Check for arguments
+FOLDER_TARGET=$1
+NAME_PART=$2
+MODE_SWITCH=$3
+FOLDER_DEEP=$4
+OUTPUT_SWITCH=$5
+VERBOSE_SWITCH=$6
+
+if [ "$MODE_SWITCH" -eq '1' ]; then
+	mode="file(s) and folder(s)"
+elif [ "$MODE_SWITCH" -eq '2' ]; then
+	mode="folder(s)"
+else
+	mode="file(s)"
+fi
+if [ "$FOLDER_DEEP" = "" ] || \
+   [ "$FOLDER_DEEP" -gt '2' ] || \
+   [ "$FOLDER_DEEP" -eq '0' ]; then
+		echo "Remove Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1"
+		FOLDER_DEEP=1
+fi
+
+## Print file name
+if [ $VERBOSE_SWITCH -eq '1' ]; then
+    sh OutputStyler "start"
+    echo ">>> Sub Module $file_name_full v$version starting >>>"
+	echo ">>> Remove Config: Folder Target=$FOLDER_TARGET, $mode Name Part=$NAME_PART, Mode=$mode >>>"
+fi
+
+## Set log files
+if [ ! -f "$SYS_LOG" ]; then
+	sys_log_file_missing_switch=1
+	touch "$SYS_LOG"
+else
+	sys_log_file_missing_switch=0
+fi
+if [ ! -f "$JOB_LOG" ]; then
+	job_log_file_missing_switch=1
+	touch "$JOB_LOG"
+else
+	job_log_file_missing_switch=0
+fi
+
+## If output is to logfile
+if [ $OUTPUT_SWITCH -eq '1' ]; then
+	exec 3>&1 4>&2
+	trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
+	exec 1>>"$SYS_LOG" 2>&1
+fi
+
+if [ $VERBOSE_SWITCH -eq '1' ]; then
+	if [ $OUTPUT_SWITCH -eq '1' ]; then
+		sh OutputStyler "start"
+		sh OutputStyler "start"
+		echo ">>> Master Module $file_name_full v$version starting >>>"
+	fi
+    sh OutputStyler "start"
+	sh OutputStyler "start"
+	sh OutputStyler "middle"
+	echo "!!! ATTENTION !!!		Parameter 3: Name Part Old i.e. current*					   !!! ATTENTION !!!"
+    echo "!!! ATTENTION !!!		ONLY wildcards at the beginning and at the end with other real content will work   !!! ATTENTION !!!"
+    echo "!!! ATTENTION !!!		ONLY wildcards with no other real content will NOT work				   !!! ATTENTION !!!"
+	echo "Filename: $file_name_full"
+	echo "Version: v$version"
+	echo "Run as user name: $run_as_user_name"
+	echo "Run as user uid: $run_as_user_uid"
+	echo "Run as group: $run_as_group_name"
+	echo "Run as group gid: $run_as_group_gid"
+	echo "Run on host: $run_on_hostname"
+	echo "Verbose is ON"
+	echo -n "Removing File(s) is "
+	if [ "$MODE_SWITCH" -eq '2' ]; then
+		echo "OFF"
+	else
+		echo "ON"
+	fi
+	echo -n "Removing Folder(s) is "
+	if [ "$MODE_SWITCH" -gt '0' ]; then
+		echo "ON"
+	else
+		echo "OFF"
+	fi
+	echo "Removing $mode Folder(s) Deep Search $FOLDER_DEEP"
+	if [ $sys_log_file_missing_switch -eq '1' ]; then
+		echo "Sys log file: $SYS_LOG is missing"
+		echo "Creating it at $SYS_LOG"
+    fi
+	if [ $job_log_file_missing_switch -eq '1' ]; then
+		echo "Job log file: $JOB_LOG is missing"
+		echo "Creating it at $JOB_LOG"
+    fi
+    if [ $OUTPUT_SWITCH -eq '1' ]; then
+		echo "Output to log file $JOB_LOG"
+	fi
+else
+	echo "Output to console...As you can see xD"
+fi
+
+if [ "$FOLDER_TARGET" = "" ]; then
+	echo "Folder Target parameter is empty. EXIT"
+	exit 1
+fi
+if [ ! -d "$FOLDER_TARGET" ]; then
+	echo "Folder Target parameter $FOLDER_TARGET is not a valid folder path. EXIT"
+	exit 1
+fi
+if [ "$NAME_PART" = "" ]; then
+	echo "$mode Name Part parameter is empty. EXIT"
+	exit 1
+fi
+if [ "$FOLDER_DEEP" -gt '2' ] || \
+   [ "$FOLDER_DEEP" -eq '0' ] || \
+   [ "$FOLDER_DEEP" = "" ]; then
+   		echo "Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. EXIT"
+		exit 1
+fi
+if [ $VERBOSE_SWITCH -eq '1' ]; then
+	echo "Folder Target: $FOLDER_TARGET"
+	echo "$mode Name Part: $NAME_PART"
+fi
+
+## Lets roll
+files_string_full="find $FOLDER_TARGET -maxdepth $FOLDER_DEEP -type f -name $NAME_PART -ls"
+
+files=( $( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | awk '{print $NF}') )
+for file in "${files[@]}"
+do
+	echo "Array files: $file"
+done
+
+folders_string_full="find $FOLDER_TARGET -maxdepth $FOLDER_DEEP -type d -name $NAME_PART -ls"
+
+folders=( $( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | awk '{print $NF}') )
+for folder in "${folders[@]}"
+do
+	echo "Array folders: $folder"
+done
+
+if [ $VERBOSE_SWITCH -eq '1' ]; then
+	if [ "$MODE_SWITCH" -lt '2' ]; then
+		echo "Files Array Full String: $files_string_full"
+		echo "This will effect the following ${#files[@]} file(s)..."
+		echo "${files[@]}"
+	fi
+	if [ "$MODE_SWITCH" -gt '0' ]; then	
+		echo "Folders Array Full String: $folders_string_full"
+		echo "This will effect the following ${#folders[@]} folder(s)..."
+		echo "${folders[@]}";fi
+        echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART started"
+fi
+
+if [ "$MODE_SWITCH" -eq '1' ]; then
+	if [ ${#files[@]} -eq '0' ] && [ ${#folders[@]} -eq '0' ] ; then
+		echo "You selected $mode to remove...But there are NO $mode with your parameters. EXIT"
+		exit 1
+	fi
+	if [ $VERBOSE_SWITCH -eq '1' ]; then
+		rm -f -R --interactive=never -v "$FOLDER_TARGET""$NAME_PART"
+	else
+		rm -f -R --interactive=never "$FOLDER_TARGET""$NAME_PART"
+	fi
+elif [ "$MODE_SWITCH" -eq '2' ]; then
+	if [ ${#folders[@]} -eq '0' ]; then
+		echo "You selected $mode to remove...But there are NO $mode with your parameters. Please check this. EXIT"
+		exit 1
+	fi
+	for folder in "${folders[@]}"
+    do
+        if [ $VERBOSE_SWITCH -eq '1' ]; then
+			echo "Working on folder in folders: $folder"
+		fi
+		if [ ! -d "$folder" ]; then
+			echo "Folder Source parameter $folder is not a valid folder path. EXIT"
+			break
+		fi
+		if [ $VERBOSE_SWITCH -eq '1' ]; then
+			rm -f -R --interactive=never -v "$folder"
+		else
+			rm -f -R --interactive=never "$folder"
+		fi
+    done
+else
+    if [ ${#files[@]} -eq '0' ]; then
+		echo "You selected $mode to remove...But there are NO $mode with your parameters. Please check this. EXIT"
+		exit 1
+	fi
+	if [ $VERBOSE_SWITCH -eq '1' ]; then
+		rm -f --interactive=never -v "$FOLDER_TARGET""$NAME_PART"
+	else
+        rm -f --interactive=never "$FOLDER_TARGET""$NAME_PART"
+	fi
+fi
+
+if [ $VERBOSE_SWITCH -eq '1' ]; then
+	sh OutputStyler "middle"
+	sh OutputStyler "end"
+fi
+
+## Check last task for errors
+status=$?
+if [ $status != 0 ]; then
+	if [ $VERBOSE_SWITCH -eq '1' ]; then
+        sh OutputStyler "error"
+	fi
+    echo "!!! Error Sub Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
+    if [ $VERBOSE_SWITCH -eq '1' ]; then
+        echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+		sh OutputStyler "error"
+		sh OutputStyler "end"
+	    sh OutputStyler "end"
+    fi
+	exit $status
+else
+	if [ $VERBOSE_SWITCH -eq '1' ]; then
+		echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
+		sh OutputStyler "end"
+		sh OutputStyler "end"
+	fi
+	exit $status
+fi

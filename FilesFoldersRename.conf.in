@@ -1,0 +1,49 @@
+### THIS A CONFIG FILE FOR FilesFoldersRename.sh
+## MODIFY IT BEHIND THE = ....NOTHING ELSE
+## DON'T RENAME IT
+
+## Parameter  1: Folder Target i.e.    "/tmp/"
+## Parameter  2: Name Part Old i.e.    "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
+## Parameter  3: Name Part New i.e.    "$(date +%y%m%d%H%M%S)"
+## Parameter  4: Script Path...Where the scripts are stored i.e. "/root/bin/"
+## Parameter  5: Rename Mode Switch 0=Rename only files
+##                                  1=Rename Files and Folders
+##                                  2=Rename only Folders
+## Parameter  6: Rename Folder Deep Search "--rename-fd=1"=Set the folder deep where File(s) and Folder(s) get renamed
+## Parameter  7: Recreate Folder Switch 0=Off
+##                                      1=On
+## Parameter  8: Output Switch      0=Console
+##                                  1=Logfile
+##                                  1=Default
+## Parameter  9: Verbose Switch     0=Off
+##                                  1=On
+##                                  1=Default
+
+
+
+## Parameter 1: File Name Part Old i.e. "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
+## Parameter 2: File Name Part New i.e. "$(date +%y%m%d%H%M%S)"
+## Parameter 3: Folder Source i.e. "/home/backup/mysql/"
+## Parameter 4: Mode Rename Switch "--rename-files-folders"=File(s) and Folder(s) will be renamed
+##				"--rename-folders"=ONLY Folder(s) will be renamed
+##              else i.e. "--rename-files"=ONLY File(s) will not be renamed
+## Parameter 5: Rename Folder Deep Search "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to rename. MAX VALUE IS 2 for security reason
+## Parameter 6: Recreate Folders Switch "--recreate-folders"=On...Folders will be recreated too
+##              else=Off...Folders will not be recreated
+## Parameter 7: Output Switch "--logfile"=On...Output to logfile
+##              else=Off...Output to console
+## Parameter 8: Verbose Switch "-v"=On, else=Off
+
+
+NAME_PART_OLD="current*" 
+NAME_PART_NEW="$(date +%y%m%d%H%S)"
+FOLDER_TARGET="/home/.backup/mysql/"
+MODE_SWITCH=1
+FOLDER_DEEP=1
+RECREATE_FOLDER_SWITCH=0
+SCRIPT_PATH="/root/bin/linux/shell/FilesFoldersActions/"
+SCRIPT_SUB_FILE_FOLDERSMV="FoldersMv.sh"
+SYS_LOG="/var/log/bash/$file_name.log"
+JOB_LOG="/tmp/bash/$file_name.log"
+OUTPUT_SWITCH=0
+VERBOSE_SWITCH=1
