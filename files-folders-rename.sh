@@ -264,7 +264,7 @@ fi
 ## Start renaming all files in array
 if [ $MODE_SWITCH -lt '2' ]; then
 
-	readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" -ls | awk '{print $NF}')
+	readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" -ls | cut -b 91- )
 	
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
 		echo "This will effect the following ${#files[@]} x file(s)..."

@@ -39,14 +39,14 @@ run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
-config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+config_file_in="$HOME/bin/linux/shell/files-folders-actions.loc/$file_name.conf.in"
 echo "Using config file $config_file_in for $file_name_full"
 
 ## Check this script is running as root !
-if [ "$(id -u)" != "0" ]; then
-	echo "Aborting, this script needs to be run as root! EXIT"
-	exit 1
-fi
+#if [ "$(id -u)" != "0" ]; then
+#	echo "Aborting, this script needs to be run as root! EXIT"
+#	exit 1
+#fi
 
 ## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
 ## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
@@ -81,12 +81,12 @@ set -o allexport
 set +o allexport
 
 ## Check for arguments
-FOLDER_TARGET=$1
-NAME_PART=$2
-MODE_SWITCH=$3
-FOLDER_DEEP=$4
-OUTPUT_SWITCH=$5
-VERBOSE_SWITCH=$6
+#FOLDER_TARGET=$1
+#NAME_PART=$2
+#MODE_SWITCH=$3
+#FOLDER_DEEP=$4
+#OUTPUT_SWITCH=$5
+#VERBOSE_SWITCH=$6
 
 if [ "$MODE_SWITCH" -eq '1' ]; then
 	mode="file(s) and folder(s)"
@@ -95,6 +95,7 @@ elif [ "$MODE_SWITCH" -eq '2' ]; then
 else
 	mode="file(s)"
 fi
+
 if [ "$FOLDER_DEEP" = "" ] || \
    [ "$FOLDER_DEEP" -gt '2' ] || \
    [ "$FOLDER_DEEP" -eq '0' ]; then
@@ -106,18 +107,25 @@ fi
 if [ $VERBOSE_SWITCH -eq '1' ]; then
     sh output-styler "start"
     echo ">>> Sub Module $file_name_full v$version starting >>>"
-	echo ">>> Remove Config: Folder Target=$FOLDER_TARGET, $mode Name Part=$NAME_PART, Mode=$mode >>>"
+	echo ">>> Remove Config: Folder Target=$FOLDER_TARGET, Name Part=$NAME_PART, Mode=$mode >>>"
 fi
 
-# Check if $run_as_user_name:$run_as_group_name have write access to log FILEs
-if [ ! -w "${SYS_LOG%/*}" ] || [[ ! -w "${JOB_LOG%/*}" && "$OUTPUT_SWITCH" -eq '0' ]]; then
-    if [ ! -w "${SYS_LOG%/*}" ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for syslog FILE $SYS_LOG."
-    fi
-    if [ ! -w "${JOB_LOG%/*}" ] && [ "$OUTPUT_SWITCH" -eq '0' ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for job log FILE $JOB_LOG."
-    fi
-    echo "Please check the job config FILE $config_file_in. EXIT";exit 2
+# Check if $run_as_user_name:$run_as_group_name have write access to log files
+if [ "$OUTPUT_SWITCH" -eq '0' ]; then
+
+	if [ ! -w "${SYS_LOG%/*}" ]; then
+		echo "$run_as_user_name:$run_as_group_name don't have write access for syslog FILE $SYS_LOG."
+	fi
+
+	if [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "$run_as_user_name:$run_as_group_name don't have write access for job log FILE $JOB_LOG."
+	fi
+
+	if [ ! -w "${SYS_LOG%/*}" ] || \
+	   [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "Please check the config file $config_file_in. EXIT"
+		exit 2
+	fi
 fi
 
 ## Set log files
@@ -127,6 +135,7 @@ if [ ! -f "$SYS_LOG" ]; then
 else
 	sys_log_file_missing_switch=0
 fi
+
 if [ ! -f "$JOB_LOG" ]; then
 	job_log_file_missing_switch=1
 	touch "$JOB_LOG"
@@ -145,7 +154,7 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	if [ $OUTPUT_SWITCH -eq '1' ]; then
 		sh output-styler "start"
 		sh output-styler "start"
-		echo ">>> Master Module $file_name_full v$version starting >>>"
+		echo ">>> Sub Module $file_name_full v$version starting >>>"
 	fi
     sh output-styler "start"
 	sh output-styler "start"
@@ -161,19 +170,22 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Run as group gid: $run_as_group_gid"
 	echo "Run on host: $run_on_hostname"
 	echo "Verbose is ON"
+
 	echo -n "Removing File(s) is "
 	if [ "$MODE_SWITCH" -eq '2' ]; then
 		echo "OFF"
 	else
 		echo "ON"
 	fi
+
 	echo -n "Removing Folder(s) is "
 	if [ "$MODE_SWITCH" -gt '0' ]; then
 		echo "ON"
 	else
 		echo "OFF"
 	fi
-	echo "Removing $mode Folder(s) Deep Search $FOLDER_DEEP"
+
+	echo "Removing $mode Folder(s) Deep $FOLDER_DEEP"
 	if [ $sys_log_file_missing_switch -eq '1' ]; then
 		echo "Sys log file: $SYS_LOG is missing"
 		echo "Creating it at $SYS_LOG"
@@ -196,87 +208,92 @@ if [ "$FOLDER_TARGET" = "" ]; then
 	echo "Folder Target parameter is empty. EXIT"
 	exit 1
 fi
+
 if [ ! -d "$FOLDER_TARGET" ]; then
 	echo "Folder Target parameter $FOLDER_TARGET is not a valid folder path. EXIT"
 	exit 1
 fi
+
 if [ "$NAME_PART" = "" ]; then
 	echo "$mode Name Part parameter is empty. EXIT"
 	exit 1
 fi
+
 if [ "$FOLDER_DEEP" -gt '2' ] || \
    [ "$FOLDER_DEEP" -eq '0' ] || \
    [ "$FOLDER_DEEP" = "" ]; then
    		echo "Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. EXIT"
 		exit 1
 fi
+
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Folder Target: $FOLDER_TARGET"
 	echo "$mode Name Part: $NAME_PART"
 fi
 
 ## Lets roll
-readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | awk '{print $NF}')
-readarray -t folders < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | awk '{print $NF}')
+readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | cut -b 91- )
+readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | cut -b 91- )
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	if [ "$MODE_SWITCH" -lt '2' ]; then
-		echo "This will effect the following ${#files[@]} file(s)..."
-		for file in "${!files[@]}"
-		do
-			echo "Array files element $file: ${files[$file]}"
-		done
-	fi
-	if [ "$MODE_SWITCH" -gt '0' ]; then	
-		echo "This will effect the following ${#folders[@]} folder(s)..."
-		for folder in "${!folders[@]}"
-		do
-			echo "Array folders element $folder: ${folders[$folder]}"
-		done
-    fi
-    echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART started"
+	echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART started"
 fi
 
-if [ "$MODE_SWITCH" -eq '1' ]; then
-	if [ ${#files[@]} -eq '0' ] && [ ${#folders[@]} -eq '0' ] ; then
+## Job containing file(s)
+if [ "$MODE_SWITCH" -lt '2' ]; then
+	## If job is file(s) only and no file(s) are present with current parameters
+	if [ "$MODE_SWITCH" -eq '0' ] && \
+	   [ ${#files[@]} -eq '0' ]; then
 		echo "You selected $mode to remove...But there are NO $mode with your parameters. EXIT"
 		exit 1
 	fi
+
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
-		rm -f -R --interactive=never -v "$FOLDER_TARGET""$NAME_PART"
-	else
-		rm -f -R --interactive=never "$FOLDER_TARGET""$NAME_PART"
+		echo "This will effect the following ${#files[@]} x file(s)..."
 	fi
-elif [ "$MODE_SWITCH" -eq '2' ]; then
-	if [ ${#folders[@]} -eq '0' ]; then
+	for file in "${!files[@]}"
+	do
+		if [ $VERBOSE_SWITCH -eq '1' ]; then
+			echo "Array files element $file: ${files[$file]}"
+			echo "Working on file: ${files[$file]}"
+			rm -f -R -v --interactive=never '${files[$file]}'
+		else
+			rm -f -R --interactive=never '${files[$file]}'
+		fi
+	done
+fi
+
+## Job containing folder(s)
+if [ "$MODE_SWITCH" -gt '0' ]; then
+
+	## If job is folder(s) only and no folder(s) are present with current parameters
+	if [ "$MODE_SWITCH" -eq '2' ] && \
+	[ ${#folders[@]} -eq '0' ]; then
 		echo "You selected $mode to remove...But there are NO $mode with your parameters. Please check this. EXIT"
 		exit 1
 	fi
+
+	if [ $VERBOSE_SWITCH -eq '1' ]; then
+		echo "This will effect the following ${#folders[@]} folder(s)..."
+	fi
+
 	for folder in "${!folders[@]}"
-    do
-        if [ $VERBOSE_SWITCH -eq '1' ]; then
-			echo "Working on folder in folders: $folder"
-		fi
+	do
+
 		if [ ! -d "${folders[$folder]}" ]; then
 			echo "Folder Source parameter ${folders[$folder]} is not a valid folder path. EXIT"
 			break
 		fi
+
 		if [ $VERBOSE_SWITCH -eq '1' ]; then
-			rm -f -R --interactive=never -v "${folders[$folder]}"
+			echo "Array folders element $folder: ${folders[$folder]}"
+			echo "Working on folder: ${folders[$folder]}"
+			rm -f -R -v --interactive=never "'${folders[$folder]}'"
 		else
-			rm -f -R --interactive=never "${folders[$folder]}"
+			rm -f -R --interactive=never "'${folders[$folder]}'"
 		fi
-    done
-else
-    if [ ${#files[@]} -eq '0' ]; then
-		echo "You selected $mode to remove...But there are NO $mode with your parameters. Please check this. EXIT"
-		exit 1
-	fi
-	if [ $VERBOSE_SWITCH -eq '1' ]; then
-		rm -f --interactive=never -v "$FOLDER_TARGET""$NAME_PART"
-	else
-        rm -f --interactive=never "$FOLDER_TARGET""$NAME_PART"
-	fi
+
+	done
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
@@ -289,7 +306,9 @@ status=$?
 if [ $status != 0 ]; then
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
         sh output-styler "error"
+		echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART stopped with error $status"
 	fi
+
     echo "!!! Error Sub Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
     if [ $VERBOSE_SWITCH -eq '1' ]; then
         echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
@@ -300,6 +319,7 @@ if [ $status != 0 ]; then
 	exit $status
 else
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
+		echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART finished successfully"
 		echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
 		sh output-styler "end"
 		sh output-styler "end"
