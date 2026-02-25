@@ -25,7 +25,7 @@
 ## Parameter 18: Verbose Switch     0=Off
 ##                                  1=On; Default
 
-FILES_FOLDERS_RENAME_CP_RM_PID="/var/run/$file_name.pid"
+PID_PATH_FULL="/tmp/bash/files-folders-cp.pid"
 FOLDER_SOURCE="/home/.backup/mysql/"
 FOLDER_TARGET="/tmp/"
 NAME_PART_OLD="current*" 

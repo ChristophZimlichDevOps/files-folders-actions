@@ -6,20 +6,22 @@
 ## Summary
 ## This script will rename files and folders like you want. Useful for backups for example.
 ##
-## Parameter 1: File Name Part Old i.e. "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
-## Parameter 2: File Name Part New i.e. "$(date +%y%m%d%H%M%S)"
-## Parameter 3: Folder Target i.e.		"/home/backup/mysql/"
-## Parameter 4: Rename Mode Switch		0=Only files
+## Parameter  1: File Name Part Old i.e. "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
+## Parameter  2: File Name Part New i.e. "$(date +%y%m%d%H%M%S)"
+## Parameter  3: Folder Target i.e.		"/home/backup/mysql/"
+## Parameter  4: Rename Mode Switch		0=Only files
 ##                             			1=Files and Folders
 ##                             			2=Only Folders
-## Parameter 5: Rename Folder Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to rename. MAX VALUE IS 2 for security reason
-## Parameter 6: Recreate Folder Switch	0=Off
+## Parameter  5: Rename Folder Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to rename. MAX VALUE IS 2 for security reason
+## Parameter  6: Recreate Folder Switch	0=Off
 ##                                     	1=On
-## Parameter 7: Sys log i.e. 			"/var/log/bash/$file_name.log"
-## Parameter 8: Job log i.e. 			"/tmp/bash/$file_name.log"
-## Parameter 9: Output Switch      		0=Console
+## Parameter  7: Sys log i.e. 			"/var/log/bash/$file_name.log"
+## Parameter  8: Job log i.e. 			"/tmp/bash/$file_name.log"
+## Parameter  9: Sys log i.e.		    "/var/log/bash/$file_name.log"
+## Parameter 10: Job log i.e.		    "/tmp/bash/$file_name.log"
+## Parameter 11: Output Switch      	0=Console
 ##                                  	1=Logfile; Default
-## Parameter 10: Verbose Switch     	0=Off
+## Parameter 12: Verbose Switch     	0=Off
 ##                                  	1=On; Default
 ##
 ## Call it like this:

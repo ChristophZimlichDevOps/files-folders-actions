@@ -13,10 +13,12 @@
 ## Parameter  8: Verbose Switch         0=Off
 ##                                      1=On; Default
 
-PID_PATH_FULL="/var/run/$file_name.pid"
+PID_PATH_FULL="/tmp/bash/files-folders-cp.pid"
 PID=98765
-FOLDER_SOURCE="/home/.backup/mysql/"
-FOLDER_TARGET="/tmp/"
+#FOLDER_SOURCE="/home/.backup/mysql/"
+#FOLDER_TARGET="/tmp/"
+FOLDER_TARGET="/home/.backup/mysql/"
+FOLDER_SOURCE="/tmp/"
 SYS_LOG="/tmp/bash/${file_name}_sys.log"
 JOB_LOG="/tmp/bash/${file_name}_job.log"
 OUTPUT_SWITCH=0

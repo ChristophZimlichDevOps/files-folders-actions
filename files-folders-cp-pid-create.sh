@@ -333,8 +333,9 @@ if [ -f "$PID_PATH_FULL" ]; then
 else
         if [ $VERBOSE_SWITCH -eq '1' ]; then
                 echo "NO PID $PID_PATH_FULL found"
-                echo "Creating PID $PID_PATH_FULL PID Process ID $PID Folder Source $FOLDER_SOURCE \
-                Folder Target $FOLDER_TARGET"
+                echo "Creating PID $PID_PATH_FULL PID Process ID $PID"
+                echo "Folder Source $FOLDER_SOURCE"
+                echo "Folder Target $FOLDER_TARGET"
         fi
         echo "$PID" "$FOLDER_SOURCE" "$FOLDER_TARGET" > "$PID_PATH_FULL"
 fi
