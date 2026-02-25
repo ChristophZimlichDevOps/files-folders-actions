@@ -19,7 +19,6 @@
 ## Parameter  9: Copy Mode Switch "--cp-files-folders"=File(s) and Folder(s) will be copied
 ##		 "--cp-folders"=ONLY Folder(s) will be copied
 ##               else i.e. "--cp-files" =ONLY File(s) will be copied
-## Parameter 10: Copy Folder Deep Search "--cp-fd=1"=Set the folder deep where File(s) and Folder(s) get copied
 ## Parameter 11: Remove Mode Switch "--rm-files-folders"=File(s) and Folder(s) will be removed
 ##               "--rm-folders"=ONLY Folder(s) will be removed
 ##               else i.e. "--rm-files"=ONLY File(s) will be removed
@@ -31,8 +30,8 @@
 ## Parameter 15: Verbose Switch "-v"=On, else=Off
 ##
 ## Call it like this:
-## sh FilesFoldersRenameCpRm.sh "/backup/internal/mysql/" "/backup/external/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "/root/bin/linux/shell/files-folders-actions/" "--rename-files" "--rename-fd=1" "--cp-files" "--cp-fd=1" "--rm-files" "rm-fd=1" "--recreate-folders-not" "--console" "-v" 
-## sh FilesFoldersRenameCpRm.sh "/home/backup/mysql/" "/tmp/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "/root/bin/" "--rename-files-folders" "--rename-fd=2" "--cp-files-folders" "--cp-fd=2" "--rm-files-folders" "rm-fd=2" "--recreate-folders-not" "--console" "-v"
+## sh files-folders-actions-aio.sh "/backup/internal/mysql/" "/backup/external/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "/root/bin/linux/shell/files-folders-actions/" "--rename-files" "--rename-fd=1" "--cp-files" "--cp-fd=1" "--rm-files" "rm-fd=1" "--recreate-folders-not" "--console" "-v" 
+## sh files-folders-actions-aio.sh "/home/backup/mysql/" "/tmp/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "/root/bin/" "--rename-files-folders" "--rename-fd=2" "--cp-files-folders" "--cp-fd=2" "--rm-files-folders" "rm-fd=2" "--recreate-folders-not" "--console" "-v"
 
 ## Clear console to debug that stuff better
 #clear
