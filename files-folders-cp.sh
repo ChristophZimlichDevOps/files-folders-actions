@@ -8,18 +8,18 @@
 ##
 ## Parameter  1: PID full path i.e. "/var/run/$file_name.pid"
 ## Parameter  2: Folder Source i.e. "/home/backup/mysql/"
-## Parameter  3: Folder Target i.e. "/tmp/"
+## Parameter  3: Folder Target i.e. "/tmp/bash/test/"
 ## Parameter  4: Name Part i.e.     "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
 ## Parameter  5: Copy Mode Switch   0=Copy only files
 ##                                  1=Copy files and folders
 ##                                  2=Copy only folders
 ## Parameter  6: Script path i.e.   "/root/bin/linux/shell/files-folders-actions/"
 ## Parameter  7: Sub Script for creating PID i.e. "folders-folders-pid-create.sh"
-## Parameter  8: Sub Script for creating PID i.e. "folders-folders-pid-rm.sh"
-## Parameter  9: Sys log i.e.       "/var/log/$file_name.log"
-## Parameter 10: Job log i.e.       "/tmp/$file_name.log"
+## Parameter  8: Sub Script for removing PID i.e. "folders-folders-pid-rm.sh"
+## Parameter  9: Sys log i.e.		"/var/log/bash/$file_name.log"
+## Parameter 10: Job log i.e.		"/tmp/bash/$file_name.log"
 ## Parameter 11: Output Switch      0=Console
-##                                  1=Log file; Default
+##                                  1=Logfile; Default
 ## Parameter 12: Verbose Switch     0=Off
 ##                                  1=On; Default
 ##
@@ -83,6 +83,21 @@ set -o allexport
 . "$config_file_in"
 set +o allexport
 
+## Set variables
+#PID_PATH_FULL="$1"
+#FOLDER_SOURCE="$2"
+#FOLDER_TARGET="$3"
+#NAME_PART="$4"
+#MODE_SWITCH=$5
+#FOLDER_DEEP=$6
+#SCRIPT_PATH="$7"
+#SCRIPT_SUB_FILE_PID_CREATE="$8"
+#SCRIPT_SUB_FILE_PID_RM="$9"
+#SYS_LOG="${10}"
+#JOB_LOG="${11}"
+#OUTPUT_SWITCH=${12}
+#VERBOSE_SWITCH=${13}
+
 # Check if $run_as_user_name:$run_as_group_name have write access to log FILEs
 if [ ! -w "${SYS_LOG%/*}" ] || [[ ! -w "${JOB_LOG%/*}" && "$OUTPUT_SWITCH" -eq '0' ]]; then
     if [ ! -w "${SYS_LOG%/*}" ]; then
@@ -140,7 +155,7 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 fi
 
 ## Check folder sources and targets in PID file
-sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_CREATE" \
+. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_CREATE" \
 	"$PID_PATH_FULL" \
 	"$$" \
 	"$FOLDER_SOURCE" \
@@ -166,12 +181,12 @@ fi
 
 ## Remove PID from PID file when job is finished
 echo "When job is done clean from PID $PID_PATH_FULL PID Process ID $$ entry"
-echo "sh $SCRIPT_PATH$SCRIPT_SUB_FILE_PID_RM \
+echo ". $SCRIPT_PATH$SCRIPT_SUB_FILE_PID_RM \
 	$PID_PATH_FULL \
 	$$ \
 	$OUTPUT_SWITCH $VERBOSE_SWITCH" \
 	> "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_RM"
-trap 'sh -- $SCRIPT_PATH"$SCRIPT_SUB_FILE_PID_RM " \
+trap '. -- $SCRIPT_PATH"$SCRIPT_SUB_FILE_PID_RM " \
 	'"$PID_PATH_FULL"' \
 	'$$' '"$OUTPUT_SWITCH"' \
 	'"$VERBOSE_SWITCH"' ' EXIT
@@ -281,17 +296,7 @@ fi
 
 ## Lets roll
 readarray -t files < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | awk '{print $NF}')
-for file in "${files[@]}"
-do
-	echo "Array files: $file"
-done
-
 readarray -t folders < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | awk '{print $NF}')
-for folder in "${!folders[@]}"
-do
-	echo "Array folders: ${folders[$folder]}"
-done
-echo "Folders Count: ${#folders[@]}"
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Folder Path Source: $FOLDER_SOURCE"
@@ -299,11 +304,17 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Copy $mode Name Part: $NAME_PART"
         if [ $MODE_SWITCH -lt '2' ] && [ "${#files[@]}" -gt '0' ]; then
 			echo "This will effect the following ${#files[@]} file(s)..."
-			echo "${files[@]}"
+			for file in "${!files[@]}"
+			do
+				echo "Array files element $file: ${files[$file]}"
+			done
 		fi
         if [ $MODE_SWITCH -gt '0' ] && [ ${#folders[@]} -gt '0' ]; then
 			echo "This will effect the following ${#folders[@]} folder(s)..."
-			echo "${folders[@]}"
+			for folder in "${!folders[@]}"
+			do
+				echo "Array folders element $folder: ${folders[$folder]}"
+			done
 		fi
 	echo "Copying $mode from $FOLDER_SOURCE to $FOLDER_TARGET with name like $NAME_PART started"
 fi

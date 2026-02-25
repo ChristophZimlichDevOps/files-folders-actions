@@ -7,14 +7,17 @@
 ## This script will remove files like you want. Useful for backups for example.
 ##
 ## Parameter 1: Folder Target i.e. "/home/backup/mysql/"
-## Parameter 2: Name Part i.e. "current*"
-## Parameter 3: Remove Mode Switch "--rm-files-folders"=File(s) and Folder(s) will be deleted
-##				"--rm-folders"=ONLY Folder(s) will be deleted
-##				else i.e. "--rm-files"=ONLY File(s) will be deleted
-## Parameter 4: Remove Files Folders Deep Search "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to remove. MAX VALUE IS 2 for security reason
-## Parameter 5: Output Switch "--logfile"=On...Output to logfile
-##				else=Off...Output to console
-## Parameter 6: Verbose Switch "-v"=On, else=Off
+## Parameter 2: Name Part i.e. 		"current*"
+## Parameter 4: Remove Mode Switch	0=Only files
+##                             		1=Files and Folders
+##                             		2=Only Folders
+## Parameter 4: Remove Files Folders Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to remove. MAX VALUE IS 2 for security reason
+## Parameter 5: Sys log i.e. 		"/var/log/bash/$file_name.log"
+## Parameter 6: Job log i.e.		"/tmp/bash/$file_name.log"
+## Parameter 7: Output Switch      	0=Console
+##                                 	1=Logfile; Default
+## Parameter 8: Verbose Switch     	0=Off
+##                                 	1=On; Default
 ##
 ## Call it like this:
 ## sh FilesFoldersRm.sh "/home/.backup/mysql/sub1" "$(date +%y%m%d*)" "0" "1" "0" "1"

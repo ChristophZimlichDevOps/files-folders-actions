@@ -9,20 +9,21 @@
 ## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d%*)"
 ## Parameter  6: Script Path...Where the scripts are stored i.e. "/root/bin/"
 ## Parameter  8: Folder Deep "1" Set the folder deep where File(s) and Folder(s) get found
-## Parameter  9: Mode Switch   0=Copy only files
-##                             1=Copy Files and Folders
-##                             2=Copy only Folders
+## Parameter  9: Mode Switch   0=Only files
+##                             1=CFiles and Folders
+##                             2=Only Folders
 ## Parameter 10: Sub Script for copying i.e. "folders-folders-cp.sh"
 ## Parameter 11: Sub Script for renaming i.e. "folders-folders-rename.sh"
 ## Parameter 12: Sub Script for removing i.e. "folders-folders-remove.sh"
 ## Parameter 13: Recreate Folder Switch 0=Off
 ##                                      1=On
-## Parameter 14: Script Path...Where the scripts are stored i.e. "/root/bin/"
-## Parameter 15: Output Switch      0=Console
+## Parameter 14: Script Path...Where the scripts are stored i.e. "$HOME/bin/"
+## Parameter 15: Sys log i.e. "/var/log/bash/$file_name.log"
+## Parameter 16: Job log i.e. "/tmp/bash/$file_name.log"
+## Parameter 17: Output Switch      0=Console
 ##                                  1=Logfile; Default
-## Parameter 16: Verbose Switch     0=Off
+## Parameter 18: Verbose Switch     0=Off
 ##                                  1=On; Default
-
 
 FILES_FOLDERS_RENAME_CP_RM_PID="/var/run/$file_name.pid"
 FOLDER_SOURCE="/home/.backup/mysql/"

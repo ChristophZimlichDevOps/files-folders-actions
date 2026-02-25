@@ -6,17 +6,20 @@
 ## Summary
 ## This script will remove the entry of the PID file or completely delete it....if it's only 1 entry....and that's the current on. Useful for backups for example.
 ##
-## Parameter  1: PID Full Path i.e. "/var/run/test.pid"
-## Parameter  2: PID Process Number i.e. "54895"
-## Parameter  3: Output Switch "--JOB_LOGfile"=On...Output to JOB_LOGfile
-##               else=Off...Output to console
-## Parameter  4: Verbose Switch "-v"=On, else=Off
+## Parameter  1: PID Full Path i.e.     "/var/run/test.pid"
+## Parameter  2: PID i.e.               "54895"
+## Parameter  3: Sys log i.e.           "/var/log/bash/$file_name.log"
+## Parameter  4: Job log i.e.           "/tmp/bash/$file_name.log"
+## Parameter  5: Output Switch          0=Console
+##                                      1=Logfile; Default
+## Parameter  6: Verbose Switch         0=Off
+##                                      1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersRenameCpRm.sh "/var/run/FilesFoldersRenameCpRm.pid" "12345" "--console" "-v"
+## sh FilesFoldersRenameCpRm.sh "/var/run/FilesFoldersRenameCpRm.pid" "12345" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
 
 ## Clear console to debug that stuff better
-clear
+#clear
 
 ## Enhanced debugging with set -x
 #set -x

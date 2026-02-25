@@ -2,25 +2,23 @@
 ## MODIFY IT BEHIND THE = ....NOTHING ELSE
 ## DON'T RENAME IT
 
-
-## Parameter  1: Copy PID Full Path i.e. "/var/run/test.pid"
-## Parameter  2: Copy PID Process Number i.e. "54895"
-## Parameter  3: Folder Source i.e.    "/home/backup/mysql/"
-## Parameter  4: Folder Target i.e.    "/tmp/"
-## Parameter  5: System Log i.e.       "/home/backup/mysql/"
-## Parameter  6: Job Log i.e.          "/home/backup/mysql/"
-## Parameter  7: Output Switch      0=Console
-##                                  1=Logfile; Default
-## Parameter  8: Verbose Switch     0=Off
-##                                  1=On; Default
+## Parameter  1: PID Full Path i.e.     "/var/run/test.pid"
+## Parameter  2: PID i.e.               "54895"
+## Parameter  3: Folder Source i.e.     "/home/backup/mysql/"
+## Parameter  4: Folder Target i.e.     "/tmp/bash/test/"
+## Parameter  5: Sys log i.e.           "/var/log/bash/$file_name.log"
+## Parameter  6: Job log i.e.           "/tmp/bash/$file_name.log"
+## Parameter  7: Output Switch          0=Console
+##                                      1=Logfile; Default
+## Parameter  8: Verbose Switch         0=Off
+##                                      1=On; Default
 
 PID_PATH_FULL="/var/run/$file_name.pid"
+PID=98765
 FOLDER_SOURCE="/home/.backup/mysql/"
 FOLDER_TARGET="/tmp/"
-NAME_PART_OLD="current*" 
-NAME_PART_DELETE="$(date +%y%m%d%*)"
-SYS_LOG=/var/log/bash/$file_name.log
-JOB_LOG=/tmp/bash/$file_name.log
+SYS_LOG="/var/log/bash/$file_name.log"
+JOB_LOG="/tmp/bash/$file_name.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

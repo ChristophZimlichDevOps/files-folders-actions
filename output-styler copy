@@ -1,0 +1,173 @@
+#!/bin/bash
+
+## Creator: Christoph Zimlich
+##
+##
+## Summary
+## This script will give back some character rows to make your output look all the same and fancy
+##
+## Parameter 1: Output Name Part i.e. "start"
+## Parameter 2: Output Switch "--logfile"=On...Output to logfile
+##              else=Off...Output to console#
+## Parameter 3: Verbose Switch "-v"=On, else=Off
+##
+## Call it like this:
+## sh output-styler "start"
+## sh output-styler "error" "--console" "-v"
+
+## Clear console to debug that stuff better
+#clear
+
+## Enhanced debugging with set -x
+#set -x
+
+## Set Stuff
+version="0.0.1"
+file_name_full="output-styler"
+log="/tmp/$file_name_full.log"
+
+#output_length=136
+
+output_line_start=">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+output_line_middle="-----------------------------------------------------------------------------------------------------------------------------------------"
+output_line_part="........................................................................................................................................."
+output_line_trouble="?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????"
+output_line_error="!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+output_line_end="<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+
+#output_char_start=">"
+#output_char_middle="-"
+#output_char_part="."
+#output_char_trouble="?"
+#output_char_error="!"
+#output_char_end="<"
+
+## Check this script is running as root !
+#if [ "$(id -u)" != "0" ]; then echo "Aborting, this script needs to be run as root! EXIT";(code=exited, status=1/FAILURE);fi
+
+## Check for arguments
+part=$1
+output=$2
+verbose=$3
+
+## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
+## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
+## is running. If another instance is running we pause for 5 seconds and then delete the PID anyway. Normally this script will run
+## in under 150ms and via cron runs every 60 seconds, so if the PID file still exists after 1 seconds then it's a orphan PID file.
+#if [ -f "$output-stylerPID" ]; then
+#        sleep 1 #if PID file exists wait 1 seconds and test again, if it still exists delete it and carry on
+#        echo "There appears to be another Process $file_name_full PID $output-stylerPID is already running, waiting for 5 seconds ..."
+#        rm -f -- "$output-stylerPID"
+#fi
+#trap 'rm -f -- $output-stylerPID' EXIT #(code=exited, status=0/SUCCESS)
+#echo $$ > "$output-stylerPID"
+
+## Set switches
+if [ "$part" = start ]; then
+        output_part="$output_line_start"
+fi
+if [ "$part" = middle ]; then
+        output_part="$output_line_middle"
+fi
+if [ "$part" = part ]; then
+        output_part="$output_line_part"
+fi
+if [ "$part" = trouble ]; then
+        output_part="$output_line_trouble"
+fi
+if [ "$part" = error ]; then
+        output_part="$output_line_error"
+fi
+if [ "$part" = end ]; then
+        output_part="$output_line_end"
+fi
+if [ "$output" = --logfile ]; then
+        output_switch=1
+else
+        output_switch=0
+fi
+if [ "$verbose" = -v ]; then
+        verbose_switch=1
+else
+        verbose_switch=0
+fi
+
+## Print file name
+if [ $verbose_switch -eq '1' ]; then
+        echo "$output_line_start"
+        echo ">>> Sub Modul $file_name_full v$version starting >>>"
+        echo ">>> Style Config: $part >>>"
+fi
+
+## Set log files
+if [ ! -f $log ]; then
+        logfile_missing_switch=1
+        touch $log
+else
+        logfile_missing_switch=0
+fi
+
+if [ $output_switch -eq '1' ]; then
+        exec 3>&1 4>&2
+        trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
+        exec 1>>$log 2>&1
+fi
+
+if [ $verbose_switch -eq '1' ]; then
+        if [ $output_switch -eq '1' ]; then
+                echo "$output_line_start"
+        	echo ">>> Sub Modul $file_name_full v$version starting >>>"
+		echo ">>> Style Config: $part >>>";fi
+        echo "$output_line_start"
+	echo "$output_line_middle"
+        echo "File Name: $file_name_full"
+        echo "Version: v$version"
+        echo "Verbose is ON"
+        echo "Output Part: $output_part"
+        if [ $logfile_missing_switch -eq '1' ]; then
+                echo "Logfile: $log is missing"
+                echo "Creating it at $log"
+        fi
+        if [ $output_switch -eq '1' ]; then
+                echo "Output to logfile $log"
+        fi
+        echo "Output to console...As you can see xD"
+fi
+
+if [ $verbose_switch -eq '1' ]; then
+        echo "Output:"
+fi
+
+#i=0
+#for i; do
+#        tmp="$tmp" && "$output_part"
+#        ((i++))
+#        if [ i = "$output_length" ]; then break;fi
+#done
+
+echo "$output_part"
+
+if [ $verbose_switch -eq '1' ]; then
+        echo "$output_line_middle"
+        echo "$output_line_end"
+fi
+status=$?
+if [ $status != 0 ]; then
+        if [ $verbose_switch -eq '1' ]; then
+                echo "$output_line_error"
+        fi
+        echo "!!! Error getting Output Style, code=$status !!!"
+        if [ $verbose_switch -eq '1' ]; then
+                echo "!!! Style Config: $part !!!"
+        	echo "!!! Sub Modul $file_name_full v$version stopped with error(s) !!!"
+        	echo "$output_line_error"
+                echo "$output_line_end"
+        fi #;exit $status
+else
+        if [ $verbose_switch -eq '1' ]; then
+                echo "<<< Getting Output Style finished <<<"
+                echo "<<< Style Config: $part <<<"
+                echo "<<< Sub Modul $file_name_full v$version finished successfully <<<"
+                echo "$output_line_end"
+        fi #exit $status
+fi

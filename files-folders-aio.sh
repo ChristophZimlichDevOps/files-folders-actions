@@ -13,18 +13,20 @@
 ## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d%*)"
 ## Parameter  6: Script Path...Where the scripts are stored i.e. "/root/bin/"
 ## Parameter  8: Folder Deep "1" Set the folder deep where File(s) and Folder(s) get found
-## Parameter  9: Mode Switch   0=Copy only files
-##                             1=Copy Files and Folders
-##                             2=Copy only Folders
+## Parameter  9: Mode Switch   0=Only files
+##                             1=CFiles and Folders
+##                             2=Only Folders
 ## Parameter 10: Sub Script for copying i.e. "folders-folders-cp.sh"
 ## Parameter 11: Sub Script for renaming i.e. "folders-folders-rename.sh"
 ## Parameter 12: Sub Script for removing i.e. "folders-folders-remove.sh"
 ## Parameter 13: Recreate Folder Switch 0=Off
 ##                                      1=On
-## Parameter 14: Script Path...Where the scripts are stored i.e. "/root/bin/"
-## Parameter 15: Output Switch      0=Console
+## Parameter 14: Script Path...Where the scripts are stored i.e. "$HOME/bin/"
+## Parameter 15: Sys log i.e. "/var/log/bash/$file_name.log"
+## Parameter 16: Job log i.e. "/tmp/bash/$file_name.log"
+## Parameter 17: Output Switch      0=Console
 ##                                  1=Logfile; Default
-## Parameter 16: Verbose Switch     0=Off
+## Parameter 18: Verbose Switch     0=Off
 ##                                  1=On; Default
 ##
 ## Call it like this:
@@ -128,7 +130,7 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 fi
 
 ## Check folder sources and targets in PID file
-sh "$SCRIPT_PATH""files-folders-cp-pid-create.sh" "$FILES_FOLDER_RENAME_CP_RM_PID" $$ "$FOLDER_SOURCE" "$FOLDER_TARGET" "$OUTPUT" "$VERBOSE"
+. "$SCRIPT_PATH""files-folders-cp-pid-create.sh" "$FILES_FOLDER_RENAME_CP_RM_PID" $$ "$FOLDER_SOURCE" "$FOLDER_TARGET" "$OUTPUT" "$VERBOSE"
 ## Check last task for error(s)
 status=$?
 if [ $status != 0 ]; then
@@ -146,8 +148,8 @@ fi
 ## Remove PID entry from PID file or the hole PID file when job is finished
 echo "When job is done clean from PID $FILES_FOLDER_RENAME_CP_RM_PID PID Process ID $$ entry"
 # shellcheck disable=SC2154
-echo "sh "$SCRIPT_PATH""files-folders-cp-pid-rm.sh" $FILES_FOLDER_RENAME_CP_RM_PID $$ $OUTPUT $VERBOSE"
-trap 'sh -- $SCRIPT_PATH"files-folders-cp-pid-rm.sh" '"$FILES_FOLDER_RENAME_CP_RM_PID"' '$$' '"$OUTPUT"' '"$VERBOSE"' ' EXIT
+echo ". "$SCRIPT_PATH""files-folders-cp-pid-rm.sh" $FILES_FOLDER_RENAME_CP_RM_PID $$ $OUTPUT $VERBOSE"
+trap '. -- $SCRIPT_PATH"files-folders-cp-pid-rm.sh" '"$FILES_FOLDER_RENAME_CP_RM_PID"' '$$' '"$OUTPUT"' '"$VERBOSE"' ' EXIT
 
 ## Check last task for error(s)
 status=$?
@@ -301,7 +303,7 @@ fi
 
 ## Lets roll
 ## Copy file(s) and/or folder(s) from source to target folder
-sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
+. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
         "$FOLDER_SOURCE" \
         "$FOLDER_TARGET" \
         "$NAME_PART_NEW" \
@@ -311,7 +313,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
         "$VERBOSE_SWITCH"
 
 ## Rename file(s) and/or folder(s) at source folder
-sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
+. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
         "$NAME_PART_OLD" \
         "$NAME_PART_NEW" \
         "$FOLDER_SOURCE" \
@@ -322,7 +324,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
         "$VERBOSE_SWITCH"
 
 ## Rename file(s) and/or folder(s) at target folder
-sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
+. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
         "$NAME_PART_OLD" \
         "$NAME_PART_NEW" \
         "$FOLDER_TARGET" \
@@ -333,7 +335,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
         "$VERBOSE_SWITCH"
 
 ## Remove file(s) and/or folder(s) at source folder
-sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RM" \
+. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RM" \
         "$FOLDER_SOURCE" \
         "$NAME_PART_DELETE" \
         "$MODE_SWITCH" \
@@ -342,7 +344,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RM" \
         "$VERBOSE_SWITCH"
 
 ## For testing: Copy back testing file(s) and/or folder(s)
-sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
+. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
         "/home/backup/mysql/full/" \
         "/backup/internal/mysql/" \
         "*" \

@@ -6,13 +6,16 @@
 ## Summary
 ## This script will check the source and folders for copying to prevent cross copying. Useful for backups for example.
 ##
-## Parameter  1: PID Full Path i.e. "/var/run/test.pid"
-## Parameter  2: PID Process Number i.e. "54895""
-## Parameter  3: Folder Source i.e. "/home/backup/mysql/"
-## Parameter  4: Folder Target i.e. "/tmp/"
-## Parameter  5: Output Switch "--JOB_LOGfile"=On...Output to JOB_LOGfile
-##               else=Off...Output to console
-## Parameter  6: Verbose Switch "-v"=On, else=Off
+## Parameter  1: PID Full Path i.e.     "/var/run/test.pid"
+## Parameter  2: PID i.e.               "54895"
+## Parameter  3: Folder Source i.e.     "/home/backup/mysql/"
+## Parameter  4: Folder Target i.e.     "/tmp/bash/test/"
+## Parameter  5: Sys log i.e.           "/var/log/bash/$file_name.log"
+## Parameter  6: Job log i.e.           "/tmp/bash/$file_name.log"
+## Parameter  7: Output Switch          0=Console
+##                                      1=Logfile; Default
+## Parameter  8: Verbose Switch         0=Off
+##                                      1=On; Default
 ##
 ## Call it like this:
 ## sh FilesFoldersCpPIDCreate.sh "/var/run/FilesFoldersRenameCpRm.pid" "51822" "/home/.backup/mysql/" "/tmp/" "0" "1"
@@ -36,10 +39,8 @@ run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
 ## Set the job config FILE from parameter
-#config_file_in="/root/bin/linux/shell/files-folders-actions/$file_name.conf.in"
 config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
 echo "Using config file $config_file_in for $file_name_full"
-#config_file_in=$1
 
 ## Check this script is running as root !
 if [ "$run_as_user_uid" != "0" ]; then
@@ -76,19 +77,20 @@ declare -a pids_tmp
 declare -a pids_source
 declare -a pids_target
 
-## Check for arguments
-PID_PATH_FULL=$1
-#PID=$2
-PID=$$
-FOLDER_SOURCE=$3
-FOLDER_TARGET=$4
-OUTPUT_SWITCH=$5
-VERBOSE_SWITCH=$6
-
 set -o allexport
 # shellcheck source=$config_file_in disable=SC1091
-. $config_file_in
+. "$config_file_in"
 set +o allexport
+
+## Check for arguments
+#PID_PATH_FULL=$1
+#PID=$2
+#FOLDER_SOURCE=$3
+#FOLDER_TARGET=$4
+#SYS_LOG=$5
+#JOB_LOG=$6
+#OUTPUT_SWITCH=$7
+#VERBOSE_SWITCH=$8
 
 #if [ -f "$PID_PATH_FULL" ]; then echo "PID file $PID_PATH_FULL not found. EXIT";EXIT STATUS=2/FAILURE;fi
 if [ "$PID" = "" ]; then

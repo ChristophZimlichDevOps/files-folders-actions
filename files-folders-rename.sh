@@ -8,16 +8,19 @@
 ##
 ## Parameter 1: File Name Part Old i.e. "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
 ## Parameter 2: File Name Part New i.e. "$(date +%y%m%d%H%M%S)"
-## Parameter 3: Folder Target i.e. "/home/backup/mysql/"
-## Parameter 4: Mode Rename Switch "--rename-files-folders"=File(s) and Folder(s) will be renamed
-##				"--rename-folders"=ONLY Folder(s) will be renamed
-##              else i.e. "--rename-files"=ONLY File(s) will not be renamed
-## Parameter 5: Rename Folder Deep Search "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to rename. MAX VALUE IS 2 for security reason
-## Parameter 6: Recreate Folders Switch "--recreate-folders"=On...Folders will be recreated too
-##              else=Off...Folders will not be recreated
-## Parameter 7: Output Switch "--logfile"=On...Output to logfile
-##              else=Off...Output to console
-## Parameter 8: Verbose Switch "-v"=On, else=Off
+## Parameter 3: Folder Target i.e.		"/home/backup/mysql/"
+## Parameter 4: Rename Mode Switch		0=Only files
+##                             			1=Files and Folders
+##                             			2=Only Folders
+## Parameter 5: Rename Folder Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to rename. MAX VALUE IS 2 for security reason
+## Parameter 6: Recreate Folder Switch	0=Off
+##                                     	1=On
+## Parameter 7: Sys log i.e. 			"/var/log/bash/$file_name.log"
+## Parameter 8: Job log i.e. 			"/tmp/bash/$file_name.log"
+## Parameter 9: Output Switch      		0=Console
+##                                  	1=Logfile; Default
+## Parameter 10: Verbose Switch     	0=Off
+##                                  	1=On; Default
 ##
 ## Call it like this:
 ## sh FilesFoldersRename.sh "current*" "$(date +%y%m%d%H%M%S)" "/home/backup/mysql/" "--rename-files" "1" "--recreate-folders-not" "--console" "-v"

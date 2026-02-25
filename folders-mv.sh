@@ -6,18 +6,18 @@
 ## Summary
 ## This script will move folder(s) and maybe recreate it like you want. Useful for backups for example.
 ##
-## Parameter  1: Folder Target i.e.    "/tmp/"
+## Parameter  1: Folder Target i.e.    "/tmp/bash/test/"
 ## Parameter  2: Name Part Old i.e.    "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
 ## Parameter  3: Name Part New i.e.    "$(date +%y%m%d%H%M%S)"
 ## Parameter  4: Recreate Folder Switch 0=Off
 ##                                      1=On
 ## Parameter  5: Script Path...Where the scripts are stored i.e. "/root/bin/"
-## Parameter  6: Output Switch      0=Console
-##                                  1=Logfile
-##                                  1=Default
-## Parameter  7: Verbose Switch     0=Off
-##                                  1=On
-##                                  1=Default
+## Parameter  6: Sys log i.e.			"/var/log/bash/$file_name.log"
+## Parameter  7: Job log i.e.			"/tmp/bash/$file_name.log"
+## Parameter  8: Output Switch      	0=Console
+##                                  	1=Logfile; Default
+## Parameter  9: Verbose Switch     	0=Off
+##                                  	1=On; Default
 ##
 ## Call it like this:
 ## sh FoldersMv.sh "/home/backup/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "1" "/root/bin/linux/shell/files-folders-actions/" "0" "1"

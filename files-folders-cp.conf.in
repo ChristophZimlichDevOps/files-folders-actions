@@ -4,18 +4,18 @@
 
 ## Parameter  1: PID full path i.e. "/var/run/$file_name.pid"
 ## Parameter  2: Folder Source i.e. "/home/backup/mysql/"
-## Parameter  3: Folder Target i.e. "/tmp/"
+## Parameter  3: Folder Target i.e. "/tmp/bash/test/"
 ## Parameter  4: Name Part i.e.     "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
 ## Parameter  5: Copy Mode Switch   0=Copy only files
 ##                                  1=Copy files and folders
 ##                                  2=Copy only folders
 ## Parameter  6: Script path i.e.   "/root/bin/linux/shell/files-folders-actions/"
 ## Parameter  7: Sub Script for creating PID i.e. "folders-folders-pid-create.sh"
-## Parameter  8: Sub Script for creating PID i.e. "folders-folders-pid-rm.sh"
-## Parameter  9: Sys log i.e.       "/var/log/$file_name.log"
-## Parameter 10: Job log i.e.       "/tmp/$file_name.log"
+## Parameter  8: Sub Script for removing PID i.e. "folders-folders-pid-rm.sh"
+## Parameter  9: Sys log i.e.		"/var/log/bash/$file_name.log"
+## Parameter 10: Job log i.e.		"/tmp/bash/$file_name.log"
 ## Parameter 11: Output Switch      0=Console
-##                                  1=Log file; Default
+##                                  1=Logfile; Default
 ## Parameter 12: Verbose Switch     0=Off
 ##                                  1=On; Default
 
@@ -24,7 +24,7 @@ FOLDER_SOURCE="/home/.backup/mysql/"
 FOLDER_TARGET="/tmp/"
 NAME_PART="current*" 
 MODE_SWITCH=1
-FOLDER_DEEP_SEARCH=1
+FOLDER_DEEP=1
 SCRIPT_PATH="$HOME/bin/linux/shell/files-folders-actions/"
 SCRIPT_SUB_FILE_PID_CREATE="files-folders-cp-pid-create.sh"
 SCRIPT_SUB_FILE_PID_RM="files-folders-cp-pid-rm.sh"
