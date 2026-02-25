@@ -6,32 +6,29 @@
 ## Summary
 ## This script will rename, copy and remove files like you want. Useful for backups for example.
 ##
-## Parameter  1: Folder Source i.e. "/home/backup/mysql/"
-## Parameter  2: Folder Target i.e. "/tmp/"
-## Parameter  3: Name Part Old i.e. "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
-## Parameter  4: Name Part New i.e. "$(date +%y%m%d%H%M%S)"
+## Parameter  1: Folder Source i.e.    "/home/backup/mysql/"
+## Parameter  2: Folder Target i.e.    "/tmp/"
+## Parameter  3: Name Part Old i.e.    "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
+## Parameter  4: Name Part New i.e.    "$(date +%y%m%d%H%M%S)"
 ## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d%*)"
 ## Parameter  6: Script Path...Where the scripts are stored i.e. "/root/bin/"
-## Parameter  7: Rename Mode Switch "--rename-files-folders"=File(s) and Folder(s) will be renamed
-##               "--rename-folders"=ONLY Folder(s) will be renamed
-##               else i.e. "--rename-files"=ONLY File(s) will be renamed
-## Parameter  8: Rename Folder Deep Search "--rename-fd=1"=Set the folder deep where File(s) and Folder(s) get renamed
-## Parameter  9: Copy Mode Switch "--cp-files-folders"=File(s) and Folder(s) will be copied
-##		 "--cp-folders"=ONLY Folder(s) will be copied
-##               else i.e. "--cp-files" =ONLY File(s) will be copied
-## Parameter 11: Remove Mode Switch "--rm-files-folders"=File(s) and Folder(s) will be removed
-##               "--rm-folders"=ONLY Folder(s) will be removed
-##               else i.e. "--rm-files"=ONLY File(s) will be removed
-## Parameter 12: Remove Folder Deep Search "--rm-fd=1"=Set the folder deep where File(s) and Folder(s) get removed
-## Parameter 13: Recreate Folders Switch "--recreate-folders"=On...Folders will be recreated too
-##               else i.e. "--recreate-folders-not"=Off...Folders will not be recreated
-## Parameter 14: Output Switch "--JOB_LOGfile"=On...OUTPUT to JOB_LOGfile
-##		 else=Off...OUTPUT to console
-## Parameter 15: Verbose Switch "-v"=On, else=Off
+## Parameter  8: Folder Deep "1" Set the folder deep where File(s) and Folder(s) get found
+## Parameter  9: Mode Switch   0=Copy only files
+##                             1=Copy Files and Folders
+##                             2=Copy only Folders
+## Parameter 10: Sub Script for copying i.e. "folders-folders-cp.sh"
+## Parameter 11: Sub Script for renaming i.e. "folders-folders-rename.sh"
+## Parameter 12: Sub Script for removing i.e. "folders-folders-remove.sh"
+## Parameter 13: Recreate Folder Switch 0=Off
+##                                      1=On
+## Parameter 14: Script Path...Where the scripts are stored i.e. "/root/bin/"
+## Parameter 15: Output Switch      0=Console
+##                                  1=Logfile; Default
+## Parameter 16: Verbose Switch     0=Off
+##                                  1=On; Default
 ##
 ## Call it like this:
-## sh files-folders-actions-aio.sh "/backup/internal/mysql/" "/backup/external/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "/root/bin/linux/shell/files-folders-actions/" "--rename-files" "--rename-fd=1" "--cp-files" "--cp-fd=1" "--rm-files" "rm-fd=1" "--recreate-folders-not" "--console" "-v" 
-## sh files-folders-actions-aio.sh "/home/backup/mysql/" "/tmp/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "/root/bin/" "--rename-files-folders" "--rename-fd=2" "--cp-files-folders" "--cp-fd=2" "--rm-files-folders" "rm-fd=2" "--recreate-folders-not" "--console" "-v"
+## sh files-folders-actions-aio.sh "/backup/internal/mysql/" "/backup/external/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "1" "1" "folders-folders-cp.sh" "folders-folders-rename.sh" "folders-folders-rm.sh" "1" "$HOME/bin/linux/shell/files-folders-actions/" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1" 
 
 ## Clear console to debug that stuff better
 #clear
@@ -45,8 +42,8 @@ file_name_full="files-folders-aio.sh"
 file_name="${file_name_full##*/}"
 
 run_as_user_name=$(whoami)
-run_as_user_uid=$(id -u $run_as_user_name)
-run_as_group_name=$(id -gn $run_as_user_name)
+run_as_user_uid=$(id -u "$run_as_user_name")
+run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
@@ -70,15 +67,16 @@ declare    NAME_PART_NEW
 declare    NAME_PART_DELETE
 # shellcheck disable=SC2034
 declare -i FOLDER_DEEP
-declare -i RENAME_MODE_SWITCH
-declare -i CP_MODE_SWITCH
-declare -i RM_MODE_SWITCH
+declare -i MODE_SWITCH
+declare    SCRIPT_SUB_FILE_FOLDERS_CP
+declare    SCRIPT_SUB_FILE_FOLDERS_RENAME
+declare    SCRIPT_SUB_FILE_FOLDERS_RM
 declare -i RECREATE_FOLDER_SWITCH
 declare    SCRIPT_PATH
+declare    SYS_LOG
+declare    JOB_LOG
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
-declare    JOB_LOG
-declare    SYS_LOG
 ## Needed for processing
 declare -i sys_log_file_missing_switch
 declare -i job_log_file_missing_switch
@@ -130,7 +128,7 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 fi
 
 ## Check folder sources and targets in PID file
-sh "$SCRIPT_PATH""FilesFoldersCpPIDCreate.sh" "$FILES_FOLDER_RENAME_CP_RM_PID" $$ "$FOLDER_SOURCE" "$FOLDER_TARGET" "$OUTPUT" "$VERBOSE"
+sh "$SCRIPT_PATH""files-folders-cp-pid-create.sh" "$FILES_FOLDER_RENAME_CP_RM_PID" $$ "$FOLDER_SOURCE" "$FOLDER_TARGET" "$OUTPUT" "$VERBOSE"
 ## Check last task for error(s)
 status=$?
 if [ $status != 0 ]; then
@@ -148,8 +146,8 @@ fi
 ## Remove PID entry from PID file or the hole PID file when job is finished
 echo "When job is done clean from PID $FILES_FOLDER_RENAME_CP_RM_PID PID Process ID $$ entry"
 # shellcheck disable=SC2154
-echo "sh $SCRIPT_PATH$FilesFoldersCpPIDRm.sh $FILES_FOLDER_RENAME_CP_RM_PID $$ $OUTPUT $VERBOSE"
-trap 'sh -- $SCRIPT_PATH$FilesFoldersCpPIDRm.sh '"$FILES_FOLDER_RENAME_CP_RM_PID"' '$$' '"$OUTPUT"' '"$VERBOSE"' ' EXIT
+echo "sh "$SCRIPT_PATH""files-folders-cp-pid-rm.sh" $FILES_FOLDER_RENAME_CP_RM_PID $$ $OUTPUT $VERBOSE"
+trap 'sh -- $SCRIPT_PATH"files-folders-cp-pid-rm.sh" '"$FILES_FOLDER_RENAME_CP_RM_PID"' '$$' '"$OUTPUT"' '"$VERBOSE"' ' EXIT
 
 ## Check last task for error(s)
 status=$?
@@ -193,46 +191,17 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
         echo "Run as group gid: $run_as_group_gid"
         echo "Run on host: $run_on_hostname"
         echo "Verbose is ON"
-
-        echo -n "Renaming File(s) is "
-        if [ "$RENAME_MODE_SWITCH" -eq '2' ]; then
-                echo "OFF"
-        else
-                echo "ON"
-        fi
-
-        echo -n "Renaming Folder(s) is "
-        if [ "$RENAME_MODE_SWITCH" -gt '0' ]; then
-                echo "ON"
-        else
-                echo "OFF"
-        fi
-
         echo "Folder(s) Deep $FOLDER_DEEP"
 
-	echo -n "Copying File(s) is "
-        if [ "$CP_MODE_SWITCH" -eq '2' ]; then
+        echo -n "Mode for file(s) is "
+        if [ "$MODE_SWITCH" -eq '2' ]; then
                 echo "OFF"
         else
                 echo "ON"
         fi
 
-        echo -n "Copying Folder(s) is "
-        if [ "$CP_MODE_SWITCH" -gt '0' ]; then
-                echo "ON"
-        else
-                echo "OFF"
-        fi
-
-	echo -n "Removing File(s) is "
-        if [ "$RM_MODE_SWITCH" -eq '2' ]; then
-                echo "OFF"
-        else
-                echo "ON"
-        fi
-
-        echo -n "Removing Folder(s) is "
-        if [ "$RM_MODE_SWITCH" -gt '0' ]; then
+        echo -n "Mode for folder(s) is "
+        if [ "$MODE_SWITCH" -gt '0' ]; then
                 echo "ON"
         else
                 echo "OFF"
@@ -322,9 +291,7 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
         echo "Name part delete: $NAME_PART_DELETE"
         echo "Script path: $SCRIPT_PATH"
         echo "Folder deep: $FOLDER_DEEP"
-        echo "Rename mode switch: $RENAME_MODE_SWITCH"
-        echo "Copy mode switch: $CP_MODE_SWITCH"
-        echo "Remove mode switch: $RM_MODE_SWITCH"
+        echo "Mde switch: $MODE_SWITCH"
         echo "Recreate folder switch: $RECREATE_FOLDER_SWITCH"
         echo "Sys log: $SYS_LOG"
         echo "Job log: $JOB_LOG"
@@ -338,7 +305,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
         "$FOLDER_SOURCE" \
         "$FOLDER_TARGET" \
         "$NAME_PART_NEW" \
-        "$CP_MODE" \
+        "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
         "$OUTPUT_SWITCH" \
         "$VERBOSE_SWITCH"
@@ -348,7 +315,18 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
         "$NAME_PART_OLD" \
         "$NAME_PART_NEW" \
         "$FOLDER_SOURCE" \
-        "$RENAME_MODE" \
+        "$MODE_SWITCH" \
+        "$FOLDER_DEEP" \
+        "$RECREATE_FOLDER_SWITCH" \
+        "$OUTPUT_SWITCH" \
+        "$VERBOSE_SWITCH"
+
+## Rename file(s) and/or folder(s) at target folder
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
+        "$NAME_PART_OLD" \
+        "$NAME_PART_NEW" \
+        "$FOLDER_TARGET" \
+        "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
         "$RECREATE_FOLDER_SWITCH" \
         "$OUTPUT_SWITCH" \
@@ -358,7 +336,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
 sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RM" \
         "$FOLDER_SOURCE" \
         "$NAME_PART_DELETE" \
-        "$RM_MODE" \
+        "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
         "$OUTPUT_SWITCH" \
         "$VERBOSE_SWITCH"

@@ -8,18 +8,13 @@
 ## Parameter  4: Name Part New i.e.    "$(date +%y%m%d%H%M%S)"
 ## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d%*)"
 ## Parameter  6: Script Path...Where the scripts are stored i.e. "/root/bin/"
-## Parameter  7: Rename Mode Switch 0=Rename only files
-##                                  1=Rename Files and Folders
-##                                  2=Rename only Folders
-## Parameter  8: Rename Folder Deep Search "--rename-fd=1"=Set the folder deep where File(s) and Folder(s) get renamed
-## Parameter  9: Copy Mode Switch   0=Copy only files
-##                                  1=Copy Files and Folders
-##                                  2=Copy only Folders
-## Parameter 10: Copy Folder Deep Search "--cp-fd=1"=Set the folder deep where File(s) and Folder(s) get copied
-## Parameter 11: Remove Mode Switch 0=Remove only files
-##                                  1=Remove Files and Folders
-##                                  2=Remove only Folders
-## Parameter 12: Remove Folder Deep Search 1=Set the folder deep where File(s) and Folder(s) get removed
+## Parameter  8: Folder Deep "1" Set the folder deep where File(s) and Folder(s) get found
+## Parameter  9: Mode Switch   0=Copy only files
+##                             1=Copy Files and Folders
+##                             2=Copy only Folders
+## Parameter 10: Sub Script for copying i.e. "folders-folders-cp.sh"
+## Parameter 11: Sub Script for renaming i.e. "folders-folders-rename.sh"
+## Parameter 12: Sub Script for removing i.e. "folders-folders-remove.sh"
 ## Parameter 13: Recreate Folder Switch 0=Off
 ##                                      1=On
 ## Parameter 14: Script Path...Where the scripts are stored i.e. "/root/bin/"
@@ -35,11 +30,9 @@ FOLDER_TARGET="/tmp/"
 NAME_PART_OLD="current*" 
 NAME_PART_DELETE="$(date +%y%m%d%*)"
 FOLDER_DEEP=1
-CP_MODE_SWITCH=1
+MODE_SWITCH=1
 SCRIPT_SUB_FILE_FOLDERS_CP="folders-folders-cp.sh"
-RENAME_MODE_SWITCH=1
 SCRIPT_SUB_FILE_FOLDERS_RENAME="folders-folders-rename.sh"
-RM_MODE_SWITCH=1
 SCRIPT_SUB_FILE_FOLDERS_RM="folders-folders-rm.sh"
 RECREATE_FOLDER_SWITCH=1
 SCRIPT_PATH="$HOME/bin/linux/shell/files-folders-actions/"

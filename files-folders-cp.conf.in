@@ -10,12 +10,13 @@
 ##                                  1=Copy files and folders
 ##                                  2=Copy only folders
 ## Parameter  6: Script path i.e.   "/root/bin/linux/shell/files-folders-actions/"
-## Parameter  7: Script sub i.e.    "FilesFoldersCpPIDCreate.sh"
-## Parameter  8: Sys log i.e.       "/var/log/$file_name.log"
-## Parameter  9: Job log i.e.       "/tmp/$file_name.log"
-## Parameter 10: Output Switch      0=Console
+## Parameter  7: Sub Script for creating PID i.e. "folders-folders-pid-create.sh"
+## Parameter  8: Sub Script for creating PID i.e. "folders-folders-pid-rm.sh"
+## Parameter  9: Sys log i.e.       "/var/log/$file_name.log"
+## Parameter 10: Job log i.e.       "/tmp/$file_name.log"
+## Parameter 11: Output Switch      0=Console
 ##                                  1=Log file; Default
-## Parameter 11: Verbose Switch     0=Off
+## Parameter 12: Verbose Switch     0=Off
 ##                                  1=On; Default
 
 PID_PATH_FULL="/var/run/$file_name.pid"
