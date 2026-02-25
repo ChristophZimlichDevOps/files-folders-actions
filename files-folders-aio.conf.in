@@ -1,0 +1,51 @@
+### THIS A CONFIG FILE FOR FilesFoldersAIO.sh
+## MODIFY IT BEHIND THE = ....NOTHING ELSE
+## DON'T RENAME IT
+
+## Parameter  1: Folder Source i.e.    "/home/backup/mysql/"
+## Parameter  2: Folder Target i.e.    "/tmp/"
+## Parameter  3: Name Part Old i.e.    "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
+## Parameter  4: Name Part New i.e.    "$(date +%y%m%d%H%M%S)"
+## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d%*)"
+## Parameter  6: Script Path...Where the scripts are stored i.e. "/root/bin/"
+## Parameter  7: Rename Mode Switch 0=Rename only files
+##                                  1=Rename Files and Folders
+##                                  2=Rename only Folders
+## Parameter  8: Rename Folder Deep Search "--rename-fd=1"=Set the folder deep where File(s) and Folder(s) get renamed
+## Parameter  9: Copy Mode Switch   0=Copy only files
+##                                  1=Copy Files and Folders
+##                                  2=Copy only Folders
+## Parameter 10: Copy Folder Deep Search "--cp-fd=1"=Set the folder deep where File(s) and Folder(s) get copied
+## Parameter 11: Remove Mode Switch 0=Remove only files
+##                                  1=Remove Files and Folders
+##                                  2=Remove only Folders
+## Parameter 12: Remove Folder Deep Search 1=Set the folder deep where File(s) and Folder(s) get removed
+## Parameter 13: Recreate Folder Switch 0=Off
+##                                      1=On
+## Parameter 14: Script Path...Where the scripts are stored i.e. "/root/bin/"
+## Parameter 15: Output Switch      0=Console
+##                                  1=Logfile; Default
+## Parameter 16: Verbose Switch     0=Off
+##                                  1=On; Default
+
+
+FILES_FOLDERS_RENAME_CP_RM_PID="/var/run/$file_name.pid"
+FOLDER_SOURCE="/home/.backup/mysql/"
+FOLDER_TARGET="/tmp/"
+NAME_PART_OLD="current*" 
+NAME_PART_DELETE="$(date +%y%m%d%*)"
+FOLDER_DEEP=1
+CP_MODE_SWITCH=1
+SCRIPT_SUB_FILE_FOLDERS_CP="folders-folders-cp.sh"
+RENAME_MODE_SWITCH=1
+SCRIPT_SUB_FILE_FOLDERS_RENAME="folders-folders-rename.sh"
+RM_MODE_SWITCH=1
+SCRIPT_SUB_FILE_FOLDERS_RM="folders-folders-rm.sh"
+RECREATE_FOLDER_SWITCH=1
+SCRIPT_PATH="$HOME/bin/linux/shell/files-folders-actions/"
+SYS_LOG="/var/log/bash/$file_name.log"
+JOB_LOG="/tmp/bash/$file_name.log"
+OUTPUT_SWITCH=0
+VERBOSE_SWITCH=1
+
+

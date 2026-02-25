@@ -29,20 +29,20 @@
 #set -x
 
 ## Set Stuff
-version="0.0.1"
-file_name_full="FilesFoldersRename.sh"
+version="0.0.1-alpha.1"
+file_name_full="files-folders-rename.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
-run_as_user_uid=$(id -u $run_as_user_name)
-run_as_group_name=$(id -gn $run_as_user_name)
+run_as_user_uid=$(id -u "$run_as_user_name")
+run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
 ## Check this script is running as root !
-if [ "$run_as_user_uid" != "0" ]; then
-    echo "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
-fi
+#if [ "$run_as_user_uid" != "0" ]; then
+#    echo "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
+#fi
 
 ## Clear used stuff
 declare	   NAME_PART_OLD
@@ -52,40 +52,29 @@ declare -i MODE_SWITCH
 declare -i FOLDER_DEEP
 declare -i RECREATE_FOLDER_SWITCH
 declare	   SCRIPT_PATH
-declare	   SCRIPT_SUB_FILE_FOLDERSMV
+declare	   SCRIPT_SUB_FILE_FOLDERS_MV
 declare	   SYS_LOG
 declare	   JOB_LOG
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Needed for processing
-declare    job_config_file
+declare    config_file_in
 declare -i sys_log_file_missing_switch
 declare -i job_log_file_missing_switch
 declare    mode
-declare -i wildcard_switch
 declare    name_part_old_clean
-declare    files_string_full
 declare -a files
 declare -i status
 
 ## Set the job config FILE from parameter
-job_config_file="/root/bin/linux/shell/FilesFoldersActions/FilesFoldersRename.conf.in"
+config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+echo "Using config file $config_file_in for $file_name_full"
 
 ## Import stuff from config FILE
 set -o allexport
-. $job_config_file
+# shellcheck source=$config_file_in disable=SC1091
+. "$config_file_in"
 set +o allexport
-
-#export FOLDER_TARGET="$FOLDER_TARGET"
-#export NAME_PART_OLD="$NAME_PART_OLD" 
-#export NAME_PART_NEW="$NAME_PART_NEW"
-#export SCRIPT_PATH="$SCRIPT_PATH"
-#export MODE_SWITCH="$MODE_SWITCH"
-#export FOLDER_DEEP="$FOLDER_DEEP"
-#export JOB_LOG="$JOB_LOG"
-#export SYS_LOG="$SYS_LOG"
-#export OUTPUT_SWITCH="$OUTPUT_SWITCH"
-#export VERBOSE_SWITCH="$VERBOSE_SWITCH"
 
 # Set log files
 if [ ! -f "$SYS_LOG" ]; then
@@ -94,6 +83,7 @@ if [ ! -f "$SYS_LOG" ]; then
 else
 	sys_log_file_missing_switch=0
 fi
+
 if [ ! -f "$JOB_LOG" ]; then
     job_log_file_missing_switch=1
 	touch "$JOB_LOG"
@@ -108,20 +98,22 @@ if [ $OUTPUT_SWITCH -eq '1' ]; then
 fi
 
 if [ "$MODE_SWITCH" -eq '0' ]; then
-		mode="file(s)"
+		mode="File(s)"
 fi
+
 if [ "$MODE_SWITCH" -eq '1' ]; then
-		mode="file(s) and folder(s)"
+		mode="File(s) and Folder(s)"
 fi
+
 if [ "$MODE_SWITCH" -eq '2' ]; then
-		mode="folder(s)"
+		mode="Folder(s)"
 fi
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	sh OutputStyler "start"
     echo ">>> Sub Module $file_name_full v$version starting >>>"
-	echo ">>> Rename Config: $mode Name Part Old=$NAME_PART_OLD, $mode Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode >>>"
+	echo ">>> Rename Config: Name Part Old=$NAME_PART_OLD, Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode >>>"
 fi
 
 ## Set parameters if not set correctly by config FILE
@@ -139,6 +131,7 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
         sh OutputStyler "start"
         echo ">>> Sub Module $file_name_full v$version starting >>>"
     fi
+
     sh OutputStyler "start"
     sh OutputStyler "start"
     sh OutputStyler "middle"
@@ -149,40 +142,48 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
     echo "Run as group: $run_as_group_name"
     echo "Run as group gid: $run_as_group_gid"
     echo "Run on host: $run_on_hostname"
-	echo -n "Renaming mode is $mode"
+
+	echo -n "Renaming file(s) is "
 	if [ "$MODE_SWITCH" -gt '1' ]; then
 		echo "OFF"
 	else
 		echo "ON"
 	fi
-	echo -n "Renaming Folder(s) is "
+
+	echo -n "Renaming folder(s) is "
 	if [ "$MODE_SWITCH" -gt '0' ]; then 
 		echo "ON"
 	else
 		echo "OFF"
 	fi
-	echo "Renaming Folder(s) Deep Search $FOLDER_DEEP"
+
+	echo "Renaming Folder(s) Deep $FOLDER_DEEP"
 	echo -n "Recreating Folder(s) is "
 	if [ "$RECREATE_FOLDER_SWITCH" -eq '1' ]; then 
 		echo "ON"
 	else
 		echo "OFF"
 	fi
+
 	if [ $OUTPUT_SWITCH -eq '1' ]; then
-		echo "Output to job log file $JOB_LOG"
 		echo "Output to sys log file $SYS_LOG"
+		echo "Output to job log file $JOB_LOG"
 	fi
-	if [ $job_log_file_missing_switch -eq '1' ]; then
-		echo "Job log file: $JOB_LOG is missing"
-		echo "Creating it at $JOB_LOG"
-	fi
+
 	if [ $sys_log_file_missing_switch -eq '1' ]; then
 		echo "Sys log file: $SYS_LOG is missing"
 		echo "Creating it at $SYS_LOG"
 	fi
+
+	if [ $job_log_file_missing_switch -eq '1' ]; then
+		echo "Job log file: $JOB_LOG is missing"
+		echo "Creating it at $JOB_LOG"
+	fi
+
 	if [ $OUTPUT_SWITCH -eq '0' ]; then
         echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
 	fi
+
     echo "Verbose is ON"
 	echo "!!! ATTENTION !!!         	Parameter 1: Name Part Old i.e. current* 	    	                               !!! ATTENTION !!!"
 	echo "!!! ATTENTION !!!         	ONLY wildcards at the beginning and at the end with other real content will work   !!! ATTENTION !!!"
@@ -193,14 +194,17 @@ if [ "$NAME_PART_OLD" = "" ]; then
 	echo "File Name Part Old parameter is empty. EXIT"
 	exit 1
 fi
+
 if [ "$NAME_PART_NEW" = "" ]; then
 	echo "File Name Part New parameter is empty. EXIT"
 	exit 1
 fi
+
 if [ "$FOLDER_TARGET" = "" ]; then
 	echo "Folder Source parameter is empty. EXIT"
 	exit 1
 fi
+
 if [ ! -d "$FOLDER_TARGET" ]; then
 	echo "Folder Source parameter $FOLDER_TARGET is not a valid folder path. EXIT"
 	exit 1
@@ -216,11 +220,6 @@ fi
 ## Lets roll
 ## Clean wildcard(s) at the beginning and at the end of $NAME_PART_OLD to match exact filename part for command rename
 if [ "$NAME_PART_OLD"  !=  "${NAME_PART_OLD//[\[\]|.? +*]/}" ]; then
-	wildcard_switch=1
-else
-	wildcard_switch=0
-fi
-if [ "$wildcard_switch" -eq '1' ]; then
 	name_part_old_clean=${NAME_PART_OLD//"?"/}
 	name_part_old_clean=${name_part_old_clean//"*"/}
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
@@ -245,42 +244,47 @@ fi
 
 ## Start renaming all files in array
 if [ $MODE_SWITCH -lt '2' ]; then
-	files_string_full="find $FOLDER_TARGET -maxdepth $FOLDER_DEEP -type f -name $NAME_PART_OLD -ls"
 
-	files=( "$( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" -ls | awk '{print $NF}')" )
-
+	readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" -ls | awk '{print $NF}')
+	
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
-		echo "Files Array Full String: $files_string_full"
 		echo "This will effect the following ${#files[@]} x file(s)..."
-		echo "${files[@]}"
+		for file in "${!files[@]}"
+		do
+			echo "Array files element $file: ${files[$file]}"
+		done
 	fi
+
 	if [ ${#files[@]} -eq '0' ]; then
 		echo "No file(s) to rename at $FOLDER_TARGET$NAME_PART_OLD."
 	else
-		for file in "${files[@]}"
+		for file in "${!files[@]}"
 		do
 			if [ $VERBOSE_SWITCH -eq '1' ]; then
-				echo "Working on file: $file"
+				echo "Working on file: ${files[$file]}"
 			fi
-			if [ ! -f "$file" ]; then
-				echo "File Path $file is not a valid. Go to next one. NEXT"
+
+			if [ ! -f "${files[$file]}" ]; then
+				echo "File Path ${files[$file]} is not a valid. Go to next one. NEXT"
 				break
 			fi
+
 			if [ $VERBOSE_SWITCH -eq '1' ]; then
-				rename -v "$name_part_old_clean" "$NAME_PART_NEW" "$file"
+				rename -v "$name_part_old_clean" "$NAME_PART_NEW" "${files[$file]}"
 			else
-				rename "$name_part_old_clean" "$NAME_PART_NEW" "$file"
+				rename "$name_part_old_clean" "$NAME_PART_NEW" "${files[$file]}"
         	fi
+
         	## Check last task for errors
         	status=$?
         	if [ $status != 0 ]; then
-				echo "Error renaming file $file from $name_part_old_clean to $NAME_PART_NEW, code="$status;
+				echo "Error renaming file ${files[$file]} to ${files[$file]/$name_part_old_clean/$NAME_PART_NEW}, code="$status;
 				echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
 				break
 				exit $status
         	else
 				if [ $VERBOSE_SWITCH -eq '1' ]; then
-					echo "Renaming file $file from $name_part_old_clean to $NAME_PART_NEW finished"
+					echo "Renaming file ${files[$file]} to ${files[$file]/$name_part_old_clean/$NAME_PART_NEW} finished successfully"
 				fi
         	fi
 		done
@@ -293,8 +297,9 @@ if [ $MODE_SWITCH -gt '0' ]; then
 		sh OutputStyler "part"
 	fi
 
-	## Call sub module for renaming folders
-    . "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERSMV" \
+	## Call sub module for renaming...better moving folders
+    # shellcheck disable=SC1090
+    . "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_MV" \
 		"$FOLDER_TARGET" \
 		"$NAME_PART_OLD" \
 		"$NAME_PART_NEW" \
@@ -306,6 +311,7 @@ if [ $MODE_SWITCH -gt '0' ]; then
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		sh OutputStyler "part"
 	fi
+	
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then

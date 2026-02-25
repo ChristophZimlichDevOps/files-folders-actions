@@ -13,7 +13,7 @@
 ## Parameter  5: Copy Mode Switch   0=Copy only files
 ##                                  1=Copy files and folders
 ##                                  2=Copy only folders
-## Parameter  6: Script path i.e.   "/root/bin/linux/shell/FilesFoldersActions/"
+## Parameter  6: Script path i.e.   "/root/bin/linux/shell/files-folders-actions/"
 ## Parameter  7: Script sub i.e.    "FilesFoldersCpPIDCreate.sh"
 ## Parameter  8: Sys log i.e.       "/var/log/$file_name.log"
 ## Parameter  9: Job log i.e.       "/tmp/$file_name.log"
@@ -23,7 +23,7 @@
 ##                                  1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersCp.sh "/var/run/$file_name.pid" "/home/backup/mysql/" "/tmp/" "current*" "1" "/root/bin/linux/shell/FilesFoldersActions/" "FilesFoldersCpPIDCreate.sh" "/var/log/$file_name.log" "/tmp/$file_name.log" "0" "1"
+## sh FilesFoldersCp.sh "/var/run/$file_name.pid" "/home/backup/mysql/" "/tmp/" "current*" "1" "/root/bin/linux/shell/files-folders-actions/" "FilesFoldersCpPIDCreate.sh" "/var/log/$file_name.log" "/tmp/$file_name.log" "0" "1"
 
 ## Clear console to debug that stuff better
 ##clear
@@ -32,18 +32,18 @@
 #set -x
 
 ## Set Stuff
-version="0.0.1"
-file_name_full="FilesFoldersCp.sh"
+version="0.0.1-alpha.1"
+file_name_full="files-folders-cp.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
-run_as_user_uid=$(id -u $run_as_user_name)
-run_as_group_name=$(id -gn $run_as_user_name)
+run_as_user_uid=$(id -u "$run_as_user_name")
+run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
 ## Check this script is running as root !
-if [ $run_as_user_uid != "0" ]; then
+if [ "$run_as_user_uid" != "0" ]; then
     echo "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		           TO USE chown AND chmod IN rsync	                !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		     ABORT THIS SCRIPT IF YOU NEED THIS FEATURES		    !!! ATTENTION !!!"
@@ -65,44 +65,35 @@ declare	   JOB_LOG
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Need for processing
+declare -i sys_log_file_missing_switch
+declare -i job_log_file_missing_switch
 declare -a files
 declare -a folders
 declare -i status
 
 ## Set the job config FILE from parameter
-job_config_file=$SCRIPT_PATH$file_name.conf.in
-#job_config_file=$1
+config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+echo "Using config file $config_file_in for $file_name_full"
+#config_file_in=$1
 
 ## Import stuff from config FILE
 set -o allexport
-. $job_config_file #/root/bin/linux/shell/FilesFoldersActions/FilesFoldersCp.conf.in
+# shellcheck source=$config_file_in disable=SC1091
+. "$config_file_in"
 set +o allexport
-
-#export FOLDER_SOURCE="$FOLDER_SOURCE"
-#export FOLDER_TARGET="$FOLDER_TARGET" 
-#export NAME_PART="$NAME_PART"
-#export MODE_SWITCH="$MODE_SWITCH"
-#export FOLDER_DEEP="$FOLDER_DEEP"
-#export PID_PATH_FULL="$PID_PATH_FULL"
-#export SCRIPT_PATH="$SCRIPT_PATH"
-#export SCRIPT_SUB_FILE="$SCRIPT_SUB_FILE"
-#export SYS_LOG="$SYS_LOG"
-#export JOB_LOG="$JOB_LOG"
-#export OUTPUT_SWITCH="$OUTPUT_SWITCH"
-#export VERBOSE_SWITCH="$VERBOSE_SWITCH"
 
 # Set log files
 if [ ! -f "$SYS_LOG" ]; then
-	sys_log_missing_switch=1
+	sys_log_file_missing_switch=1
 	touch "$SYS_LOG"
 else
-	sys_log_missing_switch=0
+	sys_log_file_missing_switch=0
 fi
 if [ ! -f "$JOB_LOG" ]; then
-	job_log_missing_switch=1
+	job_log_file_missing_switch=1
 	touch "$JOB_LOG"
 else
-	job_log_missing_switch=0
+	job_log_file_missing_switch=0
 fi
 
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
@@ -119,13 +110,13 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 fi
 
 if [ $MODE_SWITCH -eq '0' ]; then
-	mode="file(s)"
+	mode="File(s)"
 fi
 if [ $MODE_SWITCH -eq '1' ]; then
-	mode="file(s) and folder(s)"
+	mode="File(s) and Folder(s)"
 fi
 if [ $MODE_SWITCH -eq '2' ]; then
-	mode="folder(s)"
+	mode="Folder(s)"
 fi
 
 PID=$$
@@ -231,11 +222,11 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	else
 		echo "OFF"
 	fi
-	if [ $job_log_missing_switch -eq '1' ]; then
+	if [ $job_log_file_missing_switch -eq '1' ]; then
 			echo "Log file: $JOB_LOG is missing"
 			echo "Creating it at $JOB_LOG"
 	fi
-	if [ $sys_log_missing_switch -eq '1' ]; then
+	if [ $sys_log_file_missing_switch -eq '1' ]; then
 			echo "Log file: $SYS_LOG is missing"
 			echo "Creating it at $SYS_LOG"
 	fi
@@ -277,20 +268,16 @@ if [ "$NAME_PART" = "" ]; then
 fi
 
 ## Lets roll
-files_string_full="find $FOLDER_SOURCE -maxdepth $FOLDER_DEEP -type f -name $NAME_PART -ls"
-
-files=( $( find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | awk '{print $NF}') )
+readarray -t files < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | awk '{print $NF}')
 for file in "${files[@]}"
 do
 	echo "Array files: $file"
 done
 
-folders_string_full="find $FOLDER_SOURCE -maxdepth $FOLDER_DEEP -type d -name $NAME_PART -ls"
-
-folders=( $( find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | awk '{print $NF}') )
-for folder in "${folders[@]}"
+readarray -t folders < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | awk '{print $NF}')
+for folder in "${!folders[@]}"
 do
-	echo "Array folders: $folder"
+	echo "Array folders: ${folders[$folder]}"
 done
 echo "Folders Count: ${#folders[@]}"
 
@@ -299,12 +286,10 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Folder Path Target: $FOLDER_TARGET"
 	echo "Copy $mode Name Part: $NAME_PART"
         if [ $MODE_SWITCH -lt '2' ] && [ "${#files[@]}" -gt '0' ]; then
-			echo "Files Array Full String: $files_string_full"
 			echo "This will effect the following ${#files[@]} file(s)..."
 			echo "${files[@]}"
 		fi
         if [ $MODE_SWITCH -gt '0' ] && [ ${#folders[@]} -gt '0' ]; then
-			echo "Folders Array Full String: $folders_string_full"
 			echo "This will effect the following ${#folders[@]} folder(s)..."
 			echo "${folders[@]}"
 		fi
@@ -326,21 +311,23 @@ elif [ $MODE_SWITCH -eq '2' ]; then
 		echo "No $mode to copy. EXIT"
 		exit 1
 	fi
-	for folder in "${folders[@]}"
+	for folder in "${!folders[@]}"
 	do
 		if [ $VERBOSE_SWITCH -eq '1' ]; then
 			echo "Working on folder in folders: $folder"
 		fi
-        if [ ! -d "$folder" ]; then
-			echo "Folder Source parameter $folder is not a valid folder path. EXIT"
+
+        if [ ! -d "${folders[$folder]}" ]; then
+			echo "Folder Source parameter ${folders[$folder]} is not a valid folder path. EXIT"
 			break
 		fi
+
 		if [ $VERBOSE_SWITCH -eq '1' ]; then
 			echo "Copy on folder(s) with verbose command here..."
-			cp -r -f -v "$folder" "$FOLDER_TARGET"
+			cp -r -f -v "${folders[$folder]}" "$FOLDER_TARGET"
 		else
             echo "Copy only folder(s) command here..."
-			cp -r -f "$folder" "$FOLDER_TARGET"
+			cp -r -f "${folders[$folder]}" "$FOLDER_TARGET"
 		fi
 	done
 else
@@ -348,6 +335,7 @@ else
 		echo "No $mode to copy. EXIT"
 		exit 1
 	fi
+	
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		#echo "ErrorCode Before: $?"
 		cp -f -v "$FOLDER_SOURCE"*"$NAME_PART"* "$FOLDER_TARGET"

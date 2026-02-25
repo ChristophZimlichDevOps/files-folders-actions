@@ -26,8 +26,8 @@
 #set -x
 
 ## Set Stuff
-version="0.0.1"
-file_name_full="FilesFoldersRm.sh"
+version="0.0.1-alpha.1"
+file_name_full="files-folders-rm.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
@@ -36,7 +36,8 @@ run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
-job_config_file="/root/bin/linux/shell/FilesFoldersActions/FilesFoldersRm.conf.in"
+config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+echo "Using config file $config_file_in for $file_name_full"
 
 ## Check this script is running as root !
 if [ "$(id -u)" != "0" ]; then
@@ -66,15 +67,14 @@ declare -i VERBOSE_SWITCH
 ## Clear stuff need for processing
 declare -i job_log_file_missing_switch
 declare -i sys_log_file_missing_switch
-declare    files_string_full
 declare -a files
-declare    folders_string_full
 declare -a folders
 declare -i status
 
 ## Import stuff from config FILE
 set -o allexport
-. $job_config_file
+# shellcheck source=$config_file_in disable=SC1091
+. "$config_file_in"
 set +o allexport
 
 ## Check for arguments
@@ -199,33 +199,25 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 fi
 
 ## Lets roll
-files_string_full="find $FOLDER_TARGET -maxdepth $FOLDER_DEEP -type f -name $NAME_PART -ls"
-
-files=( $( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | awk '{print $NF}') )
-for file in "${files[@]}"
-do
-	echo "Array files: $file"
-done
-
-folders_string_full="find $FOLDER_TARGET -maxdepth $FOLDER_DEEP -type d -name $NAME_PART -ls"
-
-folders=( $( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | awk '{print $NF}') )
-for folder in "${folders[@]}"
-do
-	echo "Array folders: $folder"
-done
+readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | awk '{print $NF}')
+readarray -t folders < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | awk '{print $NF}')
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	if [ "$MODE_SWITCH" -lt '2' ]; then
-		echo "Files Array Full String: $files_string_full"
 		echo "This will effect the following ${#files[@]} file(s)..."
-		echo "${files[@]}"
+		for file in "${!files[@]}"
+		do
+			echo "Array files element $file: ${files[$file]}"
+		done
 	fi
 	if [ "$MODE_SWITCH" -gt '0' ]; then	
-		echo "Folders Array Full String: $folders_string_full"
 		echo "This will effect the following ${#folders[@]} folder(s)..."
-		echo "${folders[@]}";fi
-        echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART started"
+		for folder in "${!folders[@]}"
+		do
+			echo "Array folders element $folder: ${folders[$folder]}"
+		done
+    fi
+    echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART started"
 fi
 
 if [ "$MODE_SWITCH" -eq '1' ]; then
@@ -243,19 +235,19 @@ elif [ "$MODE_SWITCH" -eq '2' ]; then
 		echo "You selected $mode to remove...But there are NO $mode with your parameters. Please check this. EXIT"
 		exit 1
 	fi
-	for folder in "${folders[@]}"
+	for folder in "${!folders[@]}"
     do
         if [ $VERBOSE_SWITCH -eq '1' ]; then
 			echo "Working on folder in folders: $folder"
 		fi
-		if [ ! -d "$folder" ]; then
-			echo "Folder Source parameter $folder is not a valid folder path. EXIT"
+		if [ ! -d "${folders[$folder]}" ]; then
+			echo "Folder Source parameter ${folders[$folder]} is not a valid folder path. EXIT"
 			break
 		fi
 		if [ $VERBOSE_SWITCH -eq '1' ]; then
-			rm -f -R --interactive=never -v "$folder"
+			rm -f -R --interactive=never -v "${folders[$folder]}"
 		else
-			rm -f -R --interactive=never "$folder"
+			rm -f -R --interactive=never "${folders[$folder]}"
 		fi
     done
 else

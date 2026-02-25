@@ -22,34 +22,32 @@ clear
 #set -x
 
 ## Set Stuff
-version="0.0.1"
-file_name_full="FilesFoldersRenameCpRm.sh"
+version="0.0.1-alpha.1"
+file_name_full="files-folders-cp-pid-rm.sh"
 file_name="${file_name_full##*/}"
 
 run_as_user_name=$(whoami)
-run_as_user_uid=$(id -u $run_as_user_name)
-run_as_group_name=$(id -gn $run_as_user_name)
+run_as_user_uid=$(id -u "$run_as_user_name")
+run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
 ## Set the job config FILE from parameter
-job_config_file="/root/bin/linux/shell/FilesFoldersActions/FilesFoldersRenameCpRm.conf.in"
+config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+echo "Using config file $config_file_in for $file_name_full"
 
 ## Check this script is running as root !
-if [ $run_as_user_uid != "0" ]; then
+if [ "$run_as_user_uid" != "0" ]; then
     echo "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		           TO USE chown AND chmod IN rsync	                !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		     ABORT THIS SCRIPT IF YOU NEED THIS FEATURES		    !!! ATTENTION !!!"
 fi
 
-<<<<<<< HEAD:linux/shell/FilesFoldersActions/FilesFoldersCpPIDRm.sh
-=======
-<<<<<<< HEAD
-=======
 ## Check this script is running as root !
-if [ "$(id -u)" != "0" ]; then echo "Aborting, this script needs to be run as root! EXIT";EXIT status=1/FAILURE;fi
->>>>>>> bea9af91aadf2a9571b009a203ad1b69843c1ee9
->>>>>>> e735af2531926d956161c5b96debf9d20153c2c6:linux/shell/FilesFoldersActions/FilesFoldersCpPIDRm.sh.bak
+if [ "$(id -u)" != "0" ]; then
+        echo "Aborting, this script needs to be run as root! EXIT"
+        exit 1
+fi
 
 ## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
 ## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
@@ -63,32 +61,28 @@ fi
 trap 'rm -f -- $FILES_FOLDERS_CP_PID_RM' EXIT #EXIT status=0/SUCCESS
 echo $$ > "$FILES_FOLDERS_CP_PID_RM"
 
+declare    PID_PATH_FULL
+declare -i PID_PROCESS_ID
+declare -i OUTPUT_SWITCH
+declare -i VERBOSE_SWITCH
+
 ## Clear used stuff
 declare -a pids
 declare -a pids_tmp
-declare -i found_switch
-declare -i OUTPUT_SWITCH
-declare -i VERBOSE_SWITCH
-declare -i job_config_file
+declare -i config_file_in
 declare -i status
 
 ## Check for arguments
 PID_PATH_FULL=$1
 PID_PROCESS_ID=$2
+OUTPUT_SWITCH=$3
+VERBOSE_SWITCH=$4
 
-<<<<<<< HEAD:linux/shell/FilesFoldersActions/FilesFoldersCpPIDRm.sh
-=======
-<<<<<<< HEAD
->>>>>>> e735af2531926d956161c5b96debf9d20153c2c6:linux/shell/FilesFoldersActions/FilesFoldersCpPIDRm.sh.bak
 set -o allexport
-. $job_config_file
+# shellcheck source=$config_file_in disable=SC1091
+. $config_file_in
 set +o allexport
 
-<<<<<<< HEAD:linux/shell/FilesFoldersActions/FilesFoldersCpPIDRm.sh
-=======
-=======
->>>>>>> bea9af91aadf2a9571b009a203ad1b69843c1ee9
->>>>>>> e735af2531926d956161c5b96debf9d20153c2c6:linux/shell/FilesFoldersActions/FilesFoldersCpPIDRm.sh.bak
 if [ -f "$PID_PATH_FULL" ]; then
         if [ $VERBOSE_SWITCH -eq '1' ]; then
                 echo "PID file $PID_PATH_FULL found"
@@ -99,15 +93,15 @@ else
 fi
 
 ## Set log files
-if [ ! -f $SYS_LOG ]; then
+if [ ! -f "$SYS_LOG" ]; then
         sys_log_file_missing_switch=1
-        touch $SYS_LOG
+        touch "$SYS_LOG"
 else
         sys_log_file_missing_switch=0
 fi
-if [ ! -f $JOB_LOG ]; then
+if [ ! -f "$JOB_LOG" ]; then
         job_log_file_missing_switch=1
-        touch $JOB_LOG
+        touch "$JOB_LOG"
 else
         job_log_file_missing_switch=0
 fi
@@ -115,7 +109,7 @@ fi
 if [ $OUTPUT_SWITCH -eq '1' ]; then
         exec 3>&1 4>&2
         trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
-        exec 1>>$JOB_LOG 2>&1
+        exec 1>>"$JOB_LOG" 2>&1
 fi
 
 ## Print file name
@@ -135,15 +129,18 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
         echo "Verbose is ON"
 	echo "PID File: $PID_PATH_FULL"
 	echo "PID Process ID: $PID_PROCESS_ID"
+
         if [ $OUTPUT_SWITCH -eq '1' ]; then
                 echo "Output to SYS_LOGfile $SYS_LOG"
         else
                 echo "Output to console...As you can see xD"
         fi
+
         if [ $job_log_file_missing_switch -eq '1' ]; then
                 echo "JOB_LOGfile: $JOB_LOG is missing"
                 echo "Creating it at $JOB_LOG"
         fi
+
         if [ $sys_log_file_missing_switch -eq '1' ]; then
                 echo "SYS_LOGfile: $SYS_LOG is missing"
                 echo "Creating it at $SYS_LOG"
@@ -153,19 +150,17 @@ fi
 ## Lets roll
 if [ -f "$PID_PATH_FULL" ]; then
         ## Get content of PID file
-	pids_string_full="cat $PID_PATH_FULL"
-        pids_tmp=$(${pids_string_full})
+        readarray -t pids_tmp < <(cat "$PID_PATH_FULL")
         pids=$(echo "$pids_tmp" | grep "$PID_PROCESS_ID")
-        found_switch=0
         if [ $VERBOSE_SWITCH -eq '1' ]; then
-                echo "$pids"; echo "PIDs String Full: $pids_string_full"
+                echo "$pids"
+                echo "PIDs String Full: $pids_tmp"
         fi
         ## PID not found in PID file
-	if [ ${#pids[@]} -eq '0' ]; then
+	if [ ${#pids_tmp[@]} -eq '0' ]; then
                 echo "NO match found...in PID File $PID_PATH_FULL with PID $PID_PROCESS_ID"
         else
                 ## PID found in PID file
-		found_switch=1
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
                         echo "PID Process ID $PID_PROCESS_ID found in $PID_PATH_FULL"
                         echo "Removing entry in PID File $PID_PATH_FULL with PID $PID_PROCESS_ID started"
@@ -184,8 +179,8 @@ if [ -f "$PID_PATH_FULL" ]; then
                                 echo "Removing entry in PID File $PID_PATH_FULL with PID $PID_PROCESS_ID finished"
                         fi
 			## Check if PID file has mor content
-			pids_tmp=$(cat "$PID_PATH_FULL")
-                	if [ "$pids_tmp" = "" ]; then
+                        readarray -t pids_tmp < <(cat "$PID_PATH_FULL")
+                	if [ ${#pids_tmp[@]} -eq '0' ]; then
                         	## If PID file is empty
 				if [ $VERBOSE_SWITCH -eq '1' ]; then 
                                 echo "$PID_PATH_FULL is now empty... Deleting it"
@@ -219,24 +214,24 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 fi
 
 ## Check last task for errors
-STATUS=$?
-if [ $STATUS != 0 ]; then
+status=$?
+if [ $status != 0 ]; then
         if [ $VERBOSE_SWITCH -eq '1' ]; then
                 sh OutputStyler "error"
         fi
-        echo "!!! Error Master Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$STATUS !!!"
+        echo "!!! Error Master Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
         if [ $VERBOSE_SWITCH -eq '1' ]; then
                 echo "!!! Master Module $file_name_full v$version stopped with error(s) !!!"
                 sh OutputStyler "error"
                 sh OutputStyler "end"
                 sh OutputStyler "end"
         fi
-        exit $STATUS
+        exit $status
 else
         if [ $VERBOSE_SWITCH -eq '1' ]; then
                 echo "<<< Master Module $file_name_full v$version finished successfully <<<"
                 sh OutputStyler "end"
                 sh OutputStyler "end"
         fi
-        exit $STATUS
+        exit $status
 fi

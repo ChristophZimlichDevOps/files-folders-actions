@@ -25,20 +25,21 @@
 #set -x
 
 ## Set Stuff
-version="0.0.1"
-file_name_full="FilesFoldersCpPIDCreate.sh"
+version="0.0.1-alpha.1"
+file_name_full="files-folders-cp-pid-create.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
-run_as_user_uid=$(id -u $run_as_user_name)
-run_as_group_name=$(id -gn $run_as_user_name)
+run_as_user_uid=$(id -u "$run_as_user_name")
+run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
 ## Set the job config FILE from parameter
-#job_config_file="/root/bin/linux/shell/FilesFoldersActions/$file_name.conf.in"
-job_config_file=/root/bin/linux/shell/FilesFoldersActions/$file_name.conf.in
-#job_config_file=$1
+#config_file_in="/root/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+echo "Using config file $config_file_in for $file_name_full"
+#config_file_in=$1
 
 ## Check this script is running as root !
 if [ "$run_as_user_uid" != "0" ]; then
@@ -85,7 +86,8 @@ OUTPUT_SWITCH=$5
 VERBOSE_SWITCH=$6
 
 set -o allexport
-. $job_config_file
+# shellcheck source=$config_file_in disable=SC1091
+. $config_file_in
 set +o allexport
 
 #if [ -f "$PID_PATH_FULL" ]; then echo "PID file $PID_PATH_FULL not found. EXIT";EXIT STATUS=2/FAILURE;fi

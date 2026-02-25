@@ -1,4 +1,4 @@
-### THIS A CONFIG FILE FOR FilesFoldersAIO.sh
+### THIS A CONFIG FILE FOR FolderMv.sh
 ## MODIFY IT BEHIND THE = ....NOTHING ELSE
 ## DON'T RENAME IT
 
@@ -22,11 +22,12 @@
 ## Parameter 12: Remove Folder Deep Search 1=Set the folder deep where File(s) and Folder(s) get removed
 ## Parameter 13: Recreate Folder Switch 0=Off
 ##                                      1=On
-## Parameter 14: Script Path...Where the scripts are stored i.e. "/root/bin/"
-## Parameter 15: Output Switch      0=Console
-##                                  1=Logfile; Default
-## Parameter 16: Verbose Switch     0=Off
-##                                  1=On; Default
+## Parameter 14: Output Switch      0=Console
+##                                  1=Logfile
+##                                  1=Default
+## Parameter 15: Verbose Switch     0=Off
+##                                  1=On
+##                                  1=Default
 
 
 FILES_FOLDERS_RENAME_CP_RM_PID="/var/run/$file_name.pid"
@@ -34,17 +35,14 @@ FOLDER_SOURCE="/home/.backup/mysql/"
 FOLDER_TARGET="/tmp/"
 NAME_PART_OLD="current*" 
 NAME_PART_DELETE="$(date +%y%m%d%*)"
+SCRIPT_PATH="/root/bin/"
 RENAME_MODE_SWITCH=1
 RENAME_FOLDER_DEEP_SEARCH=1
-CP_MODE_SWITCH=1
-CP_FOLDER_DEEP_SEARCH=1
-RM_MODE_SWITCH=1
-RM_FOLDER_DEEP_SEARCH=1
+REMOVE_MODE_SWITCH=1
+REMOVE_FOLDER_DEEP_SEARCH=1
 RECREATE_FOLDER_SWITCH=1
-SCRIPT_PATH="/root/bin/linux/shell/FilesFoldersActions/"
-SYS_LOG="/var/log/bash/$file_name.log"
-JOB_LOG="/tmp/bash/$file_name.log"
+JOB_LOG="/tmp/$file_name.log"
+SYS_LOG="/var/log/$file_name.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
-
 
