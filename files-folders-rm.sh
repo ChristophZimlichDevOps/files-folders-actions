@@ -178,15 +178,18 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "Sys log file: $SYS_LOG is missing"
 		echo "Creating it at $SYS_LOG"
     fi
+
 	if [ $job_log_file_missing_switch -eq '1' ]; then
 		echo "Job log file: $JOB_LOG is missing"
 		echo "Creating it at $JOB_LOG"
     fi
-    if [ $OUTPUT_SWITCH -eq '1' ]; then
-		echo "Output to log file $JOB_LOG"
+
+    if [ $OUTPUT_SWITCH -eq '0' ]; then
+        echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
+	else
+		echo "Output to sys log file $SYS_LOG"
+		echo "Output to job log file $JOB_LOG"
 	fi
-else
-	echo "Output to console...As you can see xD"
 fi
 
 if [ "$FOLDER_TARGET" = "" ]; then

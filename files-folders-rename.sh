@@ -196,6 +196,9 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 
 	if [ $OUTPUT_SWITCH -eq '0' ]; then
         echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
+	else
+		echo "Output to sys log file $SYS_LOG"
+		echo "Output to job log file $JOB_LOG"
 	fi
 
     echo "Verbose is ON"
