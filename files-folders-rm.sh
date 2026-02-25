@@ -20,7 +20,7 @@
 ##                                 	1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersRm.sh "/home/.backup/mysql/sub1" "$(date +%y%m%d*)" "0" "1" "0" "1"
+## sh files-folders-rm.sh "/home/.backup/mysql/sub1" "$(date +%y%m%d*)" "0" "1" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "1"
 
 ## Clear console to debug that stuff better
 #clear

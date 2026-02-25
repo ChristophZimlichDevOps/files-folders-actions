@@ -24,7 +24,7 @@
 ##                                  1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersCp.sh "/var/run/$file_name.pid" "/home/backup/mysql/" "/tmp/" "current*" "1" "$HOME/bin/linux/shell/files-folders-actions/" "files-folders-pid-create.sh" "files-folders-pid-rm.sh" "/var/log/$file_name.log" "/tmp/$file_name.log" "0" "1"
+## sh files-folders-cp.sh "/var/run/$file_name.pid" "/home/backup/mysql/" "/tmp/" "current*" "1" "$HOME/bin/linux/shell/files-folders-actions/" "files-folders-pid-create.sh" "files-folders-pid-rm.sh" "/var/log/$file_name.log" "/tmp/$file_name.log" "0" "1"
 
 ## Clear console to debug that stuff better
 ##clear

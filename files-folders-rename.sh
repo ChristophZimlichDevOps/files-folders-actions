@@ -23,7 +23,7 @@
 ##                                  	1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersRename.sh "current*" "$(date +%y%m%d%H%M%S)" "/home/backup/mysql/" "--rename-files" "1" "--recreate-folders-not" "--console" "-v"
+## sh files-folders-rename.sh "current*" "$(date +%y%m%d%H%M%S)" "/home/backup/mysql/" "0" "1" "0" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
 
 ## Clear console to debug that stuff better
 #clear

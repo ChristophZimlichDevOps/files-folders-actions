@@ -16,7 +16,7 @@
 ##                                      1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersRenameCpRm.sh "/var/run/FilesFoldersRenameCpRm.pid" "12345" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
+## sh files-folders-cp-pid-rm.sh "/var/run/files-folders-cp-pid-rm.pid" "12345" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
 
 ## Clear console to debug that stuff better
 #clear

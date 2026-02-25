@@ -17,8 +17,8 @@ PID_PATH_FULL="/var/run/$file_name.pid"
 PID=98765
 FOLDER_SOURCE="/home/.backup/mysql/"
 FOLDER_TARGET="/tmp/"
-SYS_LOG="/var/log/bash/$file_name.log"
-JOB_LOG="/tmp/bash/$file_name.log"
+SYS_LOG="/tmp/bash/$file_name_sys.log"
+JOB_LOG="/tmp/bash/$file_name_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

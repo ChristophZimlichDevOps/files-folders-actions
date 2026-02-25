@@ -20,7 +20,7 @@
 ##                                  	1=On; Default
 ##
 ## Call it like this:
-## sh FoldersMv.sh "/home/backup/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "1" "/root/bin/linux/shell/files-folders-actions/" "0" "1"
+## sh folders-mv.sh "/home/backup/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "1" "/root/bin/linux/shell/files-folders-actions/" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "1"
 
 
 ## Clear console to debug that stuff better

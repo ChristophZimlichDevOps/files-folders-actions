@@ -28,8 +28,8 @@ FOLDER_DEEP=1
 SCRIPT_PATH="$HOME/bin/linux/shell/files-folders-actions/"
 SCRIPT_SUB_FILE_PID_CREATE="files-folders-cp-pid-create.sh"
 SCRIPT_SUB_FILE_PID_RM="files-folders-cp-pid-rm.sh"
-SYS_LOG="/var/log/bash/$file_name.log"
-JOB_LOG="/tmp/bash/$file_name.log"
+SYS_LOG="/tmp/bash/$file_name_sys.log"
+JOB_LOG="/tmp/bash/$file_name_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

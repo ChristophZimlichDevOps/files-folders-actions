@@ -18,7 +18,7 @@
 ##                                      1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersCpPIDCreate.sh "/var/run/FilesFoldersRenameCpRm.pid" "51822" "/home/.backup/mysql/" "/tmp/" "0" "1"
+## sh files-folders-cp-pid-create.sh "/var/run/files-folders-cp-pid-create.pid" "51822" "/home/.backup/mysql/" "/tmp/" "0" "1"
 
 
 ## Clear console to debug that stuff better
@@ -63,10 +63,11 @@ echo $$ > "$PID_PATH_FULL"
 
 ## Clear needed stuff
 declare    PID_PATH_FULL
+declare -i PID
 declare    FOLDER_SOURCE
 declare    FOLDER_TARGET
-declare -i SYS_LOG
-declare -i JOB_LOG
+declare    SYS_LOG
+declare    JOB_LOG
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Clear stuff for processing
