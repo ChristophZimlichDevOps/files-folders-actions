@@ -111,7 +111,7 @@ fi
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh OutputStyler "start"
+	sh output-styler "start"
     echo ">>> Sub Module $file_name_full v$version starting >>>"
 	echo ">>> Rename Config: Name Part Old=$NAME_PART_OLD, Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode >>>"
 fi
@@ -127,14 +127,14 @@ fi
 ## Print file name
 if [ "$VERBOSE_SWITCH" -eq '1' ]; then
     if [ "$OUTPUT_SWITCH" -eq '1' ]; then
-        sh OutputStyler "start"
-        sh OutputStyler "start"
+        sh output-styler "start"
+        sh output-styler "start"
         echo ">>> Sub Module $file_name_full v$version starting >>>"
     fi
 
-    sh OutputStyler "start"
-    sh OutputStyler "start"
-    sh OutputStyler "middle"
+    sh output-styler "start"
+    sh output-styler "start"
+    sh output-styler "middle"
     echo "Filename: $file_name_full"
     echo "Version: v$version"
     echo "Run as user name: $run_as_user_name"
@@ -294,7 +294,7 @@ fi
 ## Start renaming all folders in array
 if [ $MODE_SWITCH -gt '0' ]; then
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
-		sh OutputStyler "part"
+		sh output-styler "part"
 	fi
 
 	## Call sub module for renaming...better moving folders
@@ -309,31 +309,31 @@ if [ $MODE_SWITCH -gt '0' ]; then
 		"$VERBOSE_SWITCH"
 
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
-		sh OutputStyler "part"
+		sh output-styler "part"
 	fi
 	
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh OutputStyler "middle"
-	sh OutputStyler "end"
+	sh output-styler "middle"
+	sh output-styler "end"
 fi
 
 status=$?
 if [ $status != 0 ]; then
-	sh OutputStyler "error"
+	sh output-styler "error"
 	echo "!!! Error renaming $mode at $FOLDER_TARGET from $name_part_old_clean to $NAME_PART_NEW, code=$status !!!"
 	echo "!!! Rename Config: $mode Name Part Old=$NAME_PART_OLD, $mode Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode !!!"
 	echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-	sh OutputStyler "error"
-    sh OutputStyler "end"
+	sh output-styler "error"
+    sh output-styler "end"
 	exit $status
 else
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "<<< Renaming $mode at $FOLDER_TARGET from $name_part_old_clean to $NAME_PART_NEW finished <<<"
 		echo "<<< Rename Config: $mode Name Part Old=$NAME_PART_OLD, $mode Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode <<<"
 		echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
-		sh OutputStyler "end"
+		sh output-styler "end"
 	fi
 	exit $status
 fi

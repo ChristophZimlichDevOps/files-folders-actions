@@ -82,7 +82,7 @@ VERBOSE_SWITCH=$7
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh OutputStyler "start"
+	sh output-styler "start"
 	echo ">>> Module $file_name_full v$version starting >>>"
 	echo ">>> Move Config: Folder(s) Target=$FOLDER_TARGET, Folder(s) Name Part Old=$NAME_PART_OLD, \
 	Folder(s) Name Part New=$NAME_PART_NEW >>>"
@@ -111,14 +111,14 @@ fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	if [ $OUTPUT_SWITCH -eq '1' ]; then
-		sh OutputStyler "start"
+		sh output-styler "start"
 		echo ">>> Module $file_name_full v$version starting >>>"
 		echo ">>> Move Config: Folder(s) Target=$FOLDER_TARGET, Folder(s) Name Part Old=$NAME_PART_OLD, \
 		Folder(s) Name Part New=$NAME_PART_NEW >>>"
 	fi
 
-	sh OutputStyler "start"
-	sh OutputStyler "middle"
+	sh output-styler "start"
+	sh output-styler "middle"
 	echo "Filename: $file_name_full"
     echo "Version: v$version"
     echo "Run as user name: $run_as_user_name"
@@ -222,7 +222,7 @@ else
 	for folder in "${!folders[@]}"
     do
         if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-			sh OutputStyler "part"
+			sh output-styler "part"
 			echo "Working on folder in element $folder: ${folders[$folder]}"
 		fi
 		if [ ! -d "${folders[$folder]}" ]; then
@@ -232,9 +232,9 @@ else
 			name_new_full="${folders[$folder]/$name_part_old_clean/$NAME_PART_NEW}"
 			#name_new_full="${!folder/$name_part_old_clean/$NAME_PART_NEW}"
 			if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-				sh OutputStyler "part"
+				sh output-styler "part"
 				echo "!!! New Folder Name: $name_new_full"
-				sh OutputStyler "part"
+				sh output-styler "part"
 				echo "Moving folder from ${folders[$folder]} to $name_new_full started"
 				mv -v "${folders[$folder]}" "$name_new_full"
 			else
@@ -250,7 +250,7 @@ else
 			else
 				if [ $VERBOSE_SWITCH -eq '1' ]; then
 					echo "Moving folder from ${folders[$folder]} to $name_new_full finished successfully"
-					sh OutputStyler "part"
+					sh output-styler "part"
 				fi
 				if [ "$RECREATE_FOLDERS_SWITCH" -eq '1' ]; then
 					if [ -d "${folders[$folder]}" ]; then
@@ -268,14 +268,14 @@ else
 						status=$?
 						if [ $status != 0 ]; then
 							echo "Error recreating old folder ${folders[$folder]}, code="$status
-							sh OutputStyler "error"
+							sh output-styler "error"
 							break
 							exit $status
 
 						else
 							if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 								echo "Recreating old folder ${folders[$folder]} finished successfully"
-								sh OutputStyler "part"
+								sh output-styler "part"
 							fi
 						fi
 					fi
@@ -286,29 +286,29 @@ else
 fi
 
 if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-	sh OutputStyler "middle"
-	sh OutputStyler "end"
+	sh output-styler "middle"
+	sh output-styler "end"
 fi
 
 ## Check last task for errors
 status=$?
 if [ $status != 0 ]; then
 	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-        sh OutputStyler "error"
+        sh output-styler "error"
 	fi
     echo "!!! Error Sub Module $file_name_full from $FOLDER_TARGET to $FOLDER_TARGET, code=$status !!!"
     if [ "$VERBOSE_SWITCH" -eq '1' ]; then
         echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-		sh OutputStyler "error"
-		sh OutputStyler "end"
-	    sh OutputStyler "end"
+		sh output-styler "error"
+		sh output-styler "end"
+	    sh output-styler "end"
     fi
 	exit $status
 else
 	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 		echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
-		sh OutputStyler "end"
-		sh OutputStyler "end"
+		sh output-styler "end"
+		sh output-styler "end"
 	fi
 	exit $status
 fi

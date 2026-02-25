@@ -114,11 +114,11 @@ fi
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-        sh OutputStyler "start"
+        sh output-styler "start"
         echo ">>> Sub Module $file_name_full v$version starting >>>"
 	echo ">>> PID Config: PID=$PID_PATH_FULL PID Process ID=$PID_PROCESS_ID >>>"
-        sh OutputStyler "start"
-	sh OutputStyler "middle"
+        sh output-styler "start"
+	sh output-styler "middle"
         echo "Filename: $file_name_full"
         echo "Version: v$version"
         echo "Run as user name: $run_as_user_name"
@@ -209,29 +209,29 @@ else
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-        sh OutputStyler "middle"
-        sh OutputStyler "end"
+        sh output-styler "middle"
+        sh output-styler "end"
 fi
 
 ## Check last task for errors
 status=$?
 if [ $status != 0 ]; then
         if [ $VERBOSE_SWITCH -eq '1' ]; then
-                sh OutputStyler "error"
+                sh output-styler "error"
         fi
         echo "!!! Error Master Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
         if [ $VERBOSE_SWITCH -eq '1' ]; then
                 echo "!!! Master Module $file_name_full v$version stopped with error(s) !!!"
-                sh OutputStyler "error"
-                sh OutputStyler "end"
-                sh OutputStyler "end"
+                sh output-styler "error"
+                sh output-styler "end"
+                sh output-styler "end"
         fi
         exit $status
 else
         if [ $VERBOSE_SWITCH -eq '1' ]; then
                 echo "<<< Master Module $file_name_full v$version finished successfully <<<"
-                sh OutputStyler "end"
-                sh OutputStyler "end"
+                sh output-styler "end"
+                sh output-styler "end"
         fi
         exit $status
 fi

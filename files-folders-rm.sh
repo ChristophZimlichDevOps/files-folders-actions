@@ -101,7 +101,7 @@ fi
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-    sh OutputStyler "start"
+    sh output-styler "start"
     echo ">>> Sub Module $file_name_full v$version starting >>>"
 	echo ">>> Remove Config: Folder Target=$FOLDER_TARGET, $mode Name Part=$NAME_PART, Mode=$mode >>>"
 fi
@@ -129,13 +129,13 @@ fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	if [ $OUTPUT_SWITCH -eq '1' ]; then
-		sh OutputStyler "start"
-		sh OutputStyler "start"
+		sh output-styler "start"
+		sh output-styler "start"
 		echo ">>> Master Module $file_name_full v$version starting >>>"
 	fi
-    sh OutputStyler "start"
-	sh OutputStyler "start"
-	sh OutputStyler "middle"
+    sh output-styler "start"
+	sh output-styler "start"
+	sh output-styler "middle"
 	echo "!!! ATTENTION !!!		Parameter 3: Name Part Old i.e. current*					   !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		ONLY wildcards at the beginning and at the end with other real content will work   !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		ONLY wildcards with no other real content will NOT work				   !!! ATTENTION !!!"
@@ -263,29 +263,29 @@ else
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh OutputStyler "middle"
-	sh OutputStyler "end"
+	sh output-styler "middle"
+	sh output-styler "end"
 fi
 
 ## Check last task for errors
 status=$?
 if [ $status != 0 ]; then
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
-        sh OutputStyler "error"
+        sh output-styler "error"
 	fi
     echo "!!! Error Sub Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
     if [ $VERBOSE_SWITCH -eq '1' ]; then
         echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-		sh OutputStyler "error"
-		sh OutputStyler "end"
-	    sh OutputStyler "end"
+		sh output-styler "error"
+		sh output-styler "end"
+	    sh output-styler "end"
     fi
 	exit $status
 else
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
-		sh OutputStyler "end"
-		sh OutputStyler "end"
+		sh output-styler "end"
+		sh output-styler "end"
 	fi
 	exit $status
 fi

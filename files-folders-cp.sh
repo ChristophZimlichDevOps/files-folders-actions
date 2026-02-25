@@ -104,8 +104,8 @@ fi
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh OutputStyler "start"
-	sh OutputStyler "start"
+	sh output-styler "start"
+	sh output-styler "start"
     echo ">>> Sub Module $file_name_full v$version starting >>>"
 fi
 
@@ -186,7 +186,7 @@ fi
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-        sh OutputStyler "start"
+        sh output-styler "start"
         echo ">>> Sub Module $file_name_full v$version starting >>>"
 		echo ">>> Copy Config: Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET, \
 		Copy $mode Name Part=$NAME_PART, Mode=$mode >>>"
@@ -195,13 +195,13 @@ fi
 ## Talk to you if you want
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	if [ $OUTPUT_SWITCH -eq '1' ]; then
-		sh OutputStyler "start"
+		sh output-styler "start"
 		echo ">>> Sub Module $file_name_full v$version starting >>>"
 		echo ">>> Copy Config: Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET, \
 		Copy $mode Name Part=$NAME_PART, Mode=$mode >>>"
 	fi
-	sh OutputStyler "start"
-	sh OutputStyler "middle"
+	sh output-styler "start"
+	sh output-styler "middle"
 	echo "Filename: $file_name_full"
 	echo "Version: v$version"
 	echo "Run as user name: $run_as_user_name"
@@ -345,22 +345,22 @@ else
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh OutputStyler "middle"
-	sh OutputStyler "end"
+	sh output-styler "middle"
+	sh output-styler "end"
 fi
 
 ## Check last task for errors
 status=$?
 if [ $status -gt 1 ]; then
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
-		sh OutputStyler "error"
+		sh output-styler "error"
 	fi
         echo "!!! Error copying $mode from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "!!! Copy Config: Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET, Copy $mode Name Part=$NAME_PART, Mode=$mode !!!"
 		echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-        sh OutputStyler "error"
-		sh OutputStyler "end"
+        sh output-styler "error"
+		sh output-styler "end"
 	fi
 	exit $status
 else
@@ -368,7 +368,7 @@ else
 		echo "<<< Copy $mode from $FOLDER_SOURCE to $FOLDER_TARGET with name like $NAME_PART finished <<<"
 		echo "<<< Copy Config: Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET, Copy $mode Name Part=$NAME_PART, Mode=$mode <<<"
 		echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
-		sh OutputStyler "end"
+		sh output-styler "end"
 	fi
 	exit $status
 fi
