@@ -1,4 +1,4 @@
-# Welcome to my first pulic repository
+# >>>>>  Welcome to my first pulic repository  <<<<<
 # Useful scripts for file(s) and folder(s) actions...like every admin needs it in his daily doing
 
 Have fun with it
