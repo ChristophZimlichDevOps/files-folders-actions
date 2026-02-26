@@ -20,7 +20,7 @@
 ##                                 	1=On; Default
 ##
 ## Call it like this:
-## sh files-folders-rm.sh "/home/.backup/mysql/sub1" "$(date +%y%m%d*)" "0" "1" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "1"
+## sh FilesFoldersActionsRm.sh "/home/.backup/mysql" "$(date +%y%m%d*)" "0" "1" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
 
 ## Clear console to debug that stuff better
 #clear
@@ -30,7 +30,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="files-folders-rm.sh"
+file_name_full="FilesFoldersActionsRm.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
@@ -38,9 +38,6 @@ run_as_user_uid=$(id -u "$run_as_user_name")
 run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
-
-config_file_in="$HOME/bin/linux/shell/files-folders-actions.loc/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
 
 ## Check this script is running as root !
 #if [ "$(id -u)" != "0" ]; then
@@ -68,32 +65,114 @@ declare    FOLDER_DEEP
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Clear stuff need for processing
-declare -i job_log_file_missing_switch
-declare -i sys_log_file_missing_switch
+declare    config_file_in
 declare -a files
 declare -a folders
+declare -i sys_log_folder_missing_switch=0
+declare -i sys_log_file_missing_switch=0
+declare -i job_log_folder_missing_switch=0
+declare -i job_log_file_missing_switch=0
 declare -i status
 
-## Import stuff from config FILE
-set -o allexport
-# shellcheck source=$config_file_in disable=SC1091
-. "$config_file_in"
-set +o allexport
-
 ## Check for arguments
-#FOLDER_TARGET=$1
-#NAME_PART=$2
-#MODE_SWITCH=$3
-#FOLDER_DEEP=$4
-#OUTPUT_SWITCH=$5
-#VERBOSE_SWITCH=$6
+FOLDER_TARGET=$1
+NAME_PART=$2
+MODE_SWITCH=$3
+FOLDER_DEEP=$4
+SYS_LOG=$5
+JOB_LOG=$6
+OUTPUT_SWITCH=$7
+VERBOSE_SWITCH=$8
+
+## Set the job config FILE from parameter
+config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
+echo "Using config file $config_file_in for $file_name_full"
+
+## Import stuff from config FILE
+#set -o allexport
+# shellcheck source=$config_file_in disable=SC1091
+#. "$config_file_in"
+#set +o allexport
+
+# Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
+if [ "$OUTPUT_SWITCH" -eq '1' ]; then
+
+        # Check if log files are set
+        if [ "$SYS_LOG" = "" ]; then
+                echo "System Log parameter is empty. EXIT"
+                exit 2
+        fi
+        
+        if [ "$JOB_LOG" = "" ]; then
+                echo "Job Log parameter is empty. EXIT"
+                exit 2
+        fi
+
+        if [ ! -d "${SYS_LOG%/*}" ]; then       
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        mkdir -pv "${SYS_LOG%/*}"
+                else
+                        mkdir -p "${SYS_LOG%/*}"
+                fi
+
+                sys_log_folder_missing_switch=1
+                sys_log_file_missing_switch=1
+        fi
+
+        # Check if user has write access to sys log file
+        if [ ! -w "${SYS_LOG%/*}" ]; then
+                echo "$run_as_user_name:$run_as_group_name don't have write access for sys log file $SYS_LOG. EXIT"
+        fi
+
+        if [ ! -d "${JOB_LOG%/*}" ]; then       
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        mkdir -pv "${JOB_LOG%/*}"
+                else
+                        mkdir -p "${JOB_LOG%/*}"
+                fi
+
+                job_log_folder_missing_switch=1
+                job_log_file_missing_switch=1
+        fi
+
+        # Check if user has write access to job log file
+	if [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "$run_as_user_name:$run_as_group_name don't have write access for job log file $JOB_LOG."
+	fi
+
+        if [ ! -w "${SYS_LOG%/*}" ] || \
+	   [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "Please check the job config FILE $config_file_in. EXIT"
+		exit 2
+	fi
+
+	# Set log files
+	if [ ! -f "$SYS_LOG" ]; then
+		sys_log_file_missing_switch=1
+		touch "$SYS_LOG"
+	fi
+
+	if [ ! -f "$JOB_LOG" ]; then
+		job_log_file_missing_switch=1
+		touch "$JOB_LOG"
+	fi
+
+	# Mod Output
+	exec 3>&1 4>&2
+	trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
+	exec 1>>"$SYS_LOG" 2>&1
+fi
+
+if [ "$MODE_SWITCH" -eq '0' ]; then
+	mode="file(s)"
+fi
 
 if [ "$MODE_SWITCH" -eq '1' ]; then
 	mode="file(s) and folder(s)"
-elif [ "$MODE_SWITCH" -eq '2' ]; then
+fi
+
+if [ "$MODE_SWITCH" -eq '2' ]; then
 	mode="folder(s)"
-else
-	mode="file(s)"
 fi
 
 if [ "$FOLDER_DEEP" = "" ] || \
@@ -105,60 +184,19 @@ fi
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-    sh output-styler "start"
-    echo ">>> Sub Module $file_name_full v$version starting >>>"
-	echo ">>> Remove Config: Folder Target=$FOLDER_TARGET, Name Part=$NAME_PART, Mode=$mode >>>"
-fi
-
-# Check if $run_as_user_name:$run_as_group_name have write access to log files
-if [ "$OUTPUT_SWITCH" -eq '0' ]; then
-
-	if [ ! -w "${SYS_LOG%/*}" ]; then
-		echo "$run_as_user_name:$run_as_group_name don't have write access for syslog FILE $SYS_LOG."
-	fi
-
-	if [ ! -w "${JOB_LOG%/*}" ]; then
-		echo "$run_as_user_name:$run_as_group_name don't have write access for job log FILE $JOB_LOG."
-	fi
-
-	if [ ! -w "${SYS_LOG%/*}" ] || \
-	   [ ! -w "${JOB_LOG%/*}" ]; then
-		echo "Please check the config file $config_file_in. EXIT"
-		exit 2
-	fi
-fi
-
-## Set log files
-if [ ! -f "$SYS_LOG" ]; then
-	sys_log_file_missing_switch=1
-	touch "$SYS_LOG"
-else
-	sys_log_file_missing_switch=0
-fi
-
-if [ ! -f "$JOB_LOG" ]; then
-	job_log_file_missing_switch=1
-	touch "$JOB_LOG"
-else
-	job_log_file_missing_switch=0
-fi
-
-## If output is to logfile
-if [ $OUTPUT_SWITCH -eq '1' ]; then
-	exec 3>&1 4>&2
-	trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
-	exec 1>>"$SYS_LOG" 2>&1
-fi
-
-if [ $VERBOSE_SWITCH -eq '1' ]; then
 	if [ $OUTPUT_SWITCH -eq '1' ]; then
-		sh output-styler "start"
-		sh output-styler "start"
+		sh OutputStyler "start"
+		sh OutputStyler "start"
 		echo ">>> Sub Module $file_name_full v$version starting >>>"
+		echo ">>> Remove Config: Folder Target=$FOLDER_TARGET, Name Part=$NAME_PART, Mode=$mode >>>"
 	fi
-    sh output-styler "start"
-	sh output-styler "start"
-	sh output-styler "middle"
+	sh OutputStyler "start"
+	sh OutputStyler "start"
+	echo ">>> Sub Module $file_name_full v$version starting >>>"
+	echo ">>> Remove Config: Folder Target=$FOLDER_TARGET, Name Part=$NAME_PART, Mode=$mode >>>"
+    sh OutputStyler "start"
+	sh OutputStyler "start"
+	sh OutputStyler "middle"
 	echo "!!! ATTENTION !!!		Parameter 3: Name Part Old i.e. current*					   !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		ONLY wildcards at the beginning and at the end with other real content will work   !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		ONLY wildcards with no other real content will NOT work				   !!! ATTENTION !!!"
@@ -186,17 +224,23 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	fi
 
 	echo "Removing $mode Folder(s) Deep $FOLDER_DEEP"
+	
+	if [ $OUTPUT_SWITCH -eq '1' ]; then
+		echo "Output to sys log file $SYS_LOG"
+		echo "Output to job log file $JOB_LOG"
+	fi
+
 	if [ $sys_log_file_missing_switch -eq '1' ]; then
 		echo "Sys log file: $SYS_LOG is missing"
 		echo "Creating it at $SYS_LOG"
-    fi
+	fi
 
 	if [ $job_log_file_missing_switch -eq '1' ]; then
 		echo "Job log file: $JOB_LOG is missing"
 		echo "Creating it at $JOB_LOG"
-    fi
+	fi
 
-    if [ $OUTPUT_SWITCH -eq '0' ]; then
+	if [ $OUTPUT_SWITCH -eq '0' ]; then
         echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
 	else
 		echo "Output to sys log file $SYS_LOG"
@@ -232,8 +276,8 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 fi
 
 ## Lets roll
-readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" -ls | cut -b 91- )
-readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" -ls | cut -b 91- )
+readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART")
+readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART")
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART started"
@@ -242,87 +286,96 @@ fi
 ## Job containing file(s)
 if [ "$MODE_SWITCH" -lt '2' ]; then
 	## If job is file(s) only and no file(s) are present with current parameters
-	if [ "$MODE_SWITCH" -eq '0' ] && \
-	   [ ${#files[@]} -eq '0' ]; then
+	if [ ${#files[@]} -eq '0' ]; then
 		echo "You selected $mode to remove...But there are NO $mode with your parameters. EXIT"
 		exit 1
 	fi
 
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "This will effect the following ${#files[@]} x file(s)..."
-	fi
-	for file in "${!files[@]}"
-	do
-		if [ $VERBOSE_SWITCH -eq '1' ]; then
+
+		for file in "${!files[@]}"
+		do
 			echo "Array files element $file: ${files[$file]}"
-			echo "Working on file: ${files[$file]}"
-			rm -f -R -v --interactive=never '${files[$file]}'
-		else
-			rm -f -R --interactive=never '${files[$file]}'
-		fi
-	done
+		done
+
+		echo "Starting removing file(s) now..."
+		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
+			-exec rm -f -v --interactive=never {} ";"
+	else
+		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
+			-exec rm -f --interactive=never {} ";"
+	fi
+fi
+
+## Check last task for error(s)
+status=$?
+if [ $status != 0 ]; then
+        # shellcheck disable=SC2154
+        echo "Error removing file(s) at $FOLDER_TARGET with name like $NAME_PART, code=$status, EXIT"
+        if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+                echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+        fi
+        exit $status
+else
+        if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+			echo "Removing file(s) at $FOLDER_TARGET with name like $NAME_PART finished successfully"
+        fi
 fi
 
 ## Job containing folder(s)
 if [ "$MODE_SWITCH" -gt '0' ]; then
 
 	## If job is folder(s) only and no folder(s) are present with current parameters
-	if [ "$MODE_SWITCH" -eq '2' ] && \
-	[ ${#folders[@]} -eq '0' ]; then
+	if [ ${#folders[@]} -eq '0' ]; then
 		echo "You selected $mode to remove...But there are NO $mode with your parameters. Please check this. EXIT"
 		exit 1
 	fi
 
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "This will effect the following ${#folders[@]} folder(s)..."
-	fi
 
-	for folder in "${!folders[@]}"
-	do
-
-		if [ ! -d "${folders[$folder]}" ]; then
-			echo "Folder Source parameter ${folders[$folder]} is not a valid folder path. EXIT"
-			break
-		fi
-
-		if [ $VERBOSE_SWITCH -eq '1' ]; then
+		for folder in "${!folders[@]}"
+		do
 			echo "Array folders element $folder: ${folders[$folder]}"
-			echo "Working on folder: ${folders[$folder]}"
-			rm -f -R -v --interactive=never "'${folders[$folder]}'"
-		else
-			rm -f -R --interactive=never "'${folders[$folder]}'"
-		fi
+		done
 
-	done
+		echo "Starting removing folder(s) now..."
+		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
+			-exec rmdir --ignore-fail-on-non-empty -v {} ";"
+	else
+		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
+			-exec rmdir --ignore-fail-on-non-empty {} ";"	
+	fi
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh output-styler "middle"
-	sh output-styler "end"
+	sh OutputStyler "middle"
+	sh OutputStyler "end"
 fi
 
 ## Check last task for errors
 status=$?
 if [ $status != 0 ]; then
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
-        sh output-styler "error"
+        sh OutputStyler "error"
 		echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART stopped with error $status"
 	fi
 
-    echo "!!! Error Sub Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
+    echo "!!! Error Sub Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status"
     if [ $VERBOSE_SWITCH -eq '1' ]; then
         echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-		sh output-styler "error"
-		sh output-styler "end"
-	    sh output-styler "end"
+		sh OutputStyler "error"
+		sh OutputStyler "end"
+	    sh OutputStyler "end"
     fi
 	exit $status
 else
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART finished successfully"
 		echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
-		sh output-styler "end"
-		sh output-styler "end"
+		sh OutputStyler "end"
+		sh OutputStyler "end"
 	fi
 	exit $status
 fi

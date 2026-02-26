@@ -16,7 +16,12 @@
 ##                                      1=On; Default
 ##
 ## Call it like this:
-## sh files-folders-cp-pid-rm.sh "/var/run/files-folders-cp-pid-rm.pid" "12345" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
+## sh FilesFoldersActionsCpPIDRm.sh \
+##      "/var/run/FilesFoldersActionsCpPIDRm.pid" \
+##      "12345" "/var/log/bash/$file_name.log" \
+##      "/tmp/bash/$file_name.log" \
+##      "0" \
+##      "1"
 
 ## Clear console to debug that stuff better
 #clear
@@ -26,7 +31,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="files-folders-cp-pid-rm.sh"
+file_name_full="FilesFoldersActionsCpPIDRm.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
@@ -34,10 +39,6 @@ run_as_user_uid=$(id -u "$run_as_user_name")
 run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
-
-## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
 
 ## Check this script is running as root !
 if [ "$run_as_user_uid" != "0" ]; then
@@ -60,23 +61,101 @@ declare    JOB_LOG
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Clear used stuff
+declare    config_file_in
 declare -a pids
 declare -a pids_tmp
-declare -i config_file_in
+declare -i sys_log_folder_missing_switch=0
+declare -i sys_log_file_missing_switch=0
+declare -i job_log_folder_missing_switch=0
+declare -i job_log_file_missing_switch=0
 declare -i status
 
-## Check for arguments
-#PID_PATH_FULL=$1
-#PID=$2
-#SYS_LOG=$3
-#JOB_LOG=$4
-#OUTPUT_SWITCH=$5
-#VERBOSE_SWITCH=$6
+## Set parameters
+PID_PATH_FULL=$1
+PID=$2
+SYS_LOG=$3
+JOB_LOG=$4
+OUTPUT_SWITCH=$5
+VERBOSE_SWITCH=$6
 
+## Set the job config FILE from parameter
+config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
+echo "Using config file $config_file_in for $file_name_full"
+
+## Import stuff from config file
 set -o allexport
 # shellcheck source=$config_file_in disable=SC1091
-. $config_file_in
+. "$config_file_in"
 set +o allexport
+
+# Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
+if [ "$OUTPUT_SWITCH" -eq '1' ]; then
+
+        # Check if log files are set
+        if [ "$SYS_LOG" = "" ]; then
+                echo "System Log parameter is empty. EXIT"
+                exit 2
+        fi
+        
+        if [ "$JOB_LOG" = "" ]; then
+                echo "Job Log parameter is empty. EXIT"
+                exit 2
+        fi
+
+        if [ ! -d "${SYS_LOG%/*}" ]; then       
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        mkdir -pv "${SYS_LOG%/*}"
+                else
+                        mkdir -p "${SYS_LOG%/*}"
+                fi
+
+                sys_log_folder_missing_switch=1
+                sys_log_file_missing_switch=1
+        fi
+
+        # Check if user has write access to sys log file
+        if [ ! -w "${SYS_LOG%/*}" ]; then
+                echo "$run_as_user_name:$run_as_group_name don't have write access for sys log file $SYS_LOG. EXIT"
+        fi
+
+        if [ ! -d "${JOB_LOG%/*}" ]; then       
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        mkdir -pv "${JOB_LOG%/*}"
+                else
+                        mkdir -p "${JOB_LOG%/*}"
+                fi
+
+                job_log_folder_missing_switch=1
+                job_log_file_missing_switch=1
+        fi
+
+        # Check if user has write access to job log file
+	if [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "$run_as_user_name:$run_as_group_name don't have write access for job log file $JOB_LOG."
+	fi
+
+        if [ ! -w "${SYS_LOG%/*}" ] || \
+	   [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "Please check the job config FILE $config_file_in. EXIT"
+		exit 2
+	fi
+
+	# Set log files
+	if [ ! -f "$SYS_LOG" ]; then
+		sys_log_file_missing_switch=1
+		touch "$SYS_LOG"
+	fi
+
+	if [ ! -f "$JOB_LOG" ]; then
+		job_log_file_missing_switch=1
+		touch "$JOB_LOG"
+	fi
+
+	# Mod Output
+	exec 3>&1 4>&2
+	trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
+	exec 1>>"$SYS_LOG" 2>&1
+fi
 
 ## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
 ## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
@@ -100,44 +179,20 @@ if [ ! -f "$PID_PATH_FULL" ]; then
         
 fi
 
-# Check if $run_as_user_name:$run_as_group_name have write access to log FILEs
-if [ ! -w "${SYS_LOG%/*}" ] || [[ ! -w "${JOB_LOG%/*}" && "$OUTPUT_SWITCH" -eq '0' ]]; then
-    if [ ! -w "${SYS_LOG%/*}" ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for syslog FILE $SYS_LOG."
-    fi
-    if [ ! -w "${JOB_LOG%/*}" ] && [ "$OUTPUT_SWITCH" -eq '0' ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for job log FILE $JOB_LOG."
-    fi
-    echo "Please check the job config FILE $config_file_in. EXIT";exit 2
-fi
-
-## Set log files
-if [ ! -f "$SYS_LOG" ]; then
-        sys_log_file_missing_switch=1
-        touch "$SYS_LOG"
-else
-        sys_log_file_missing_switch=0
-fi
-if [ ! -f "$JOB_LOG" ]; then
-        job_log_file_missing_switch=1
-        touch "$JOB_LOG"
-else
-        job_log_file_missing_switch=0
-fi
-
-if [ $OUTPUT_SWITCH -eq '1' ]; then
-        exec 3>&1 4>&2
-        trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
-        exec 1>>"$JOB_LOG" 2>&1
-fi
-
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-        sh output-styler "start"
+        if [ "$OUTPUT_SWITCH" -eq '1' ]; then
+	        sh OutputStyler "start"
+        	sh OutputStyler "start"
+                echo ">>> Sub Module $file_name_full v$version starting >>>"
+                echo ">>> PID Remove Config: PID Path=$PID_PATH_FULL, PID=$PID >>>"
+        fi
+        sh OutputStyler "start"
+        sh OutputStyler "start"
         echo ">>> Sub Module $file_name_full v$version starting >>>"
-	echo ">>> PID Config: PID=$PID_PATH_FULL PID Process ID=$PID >>>"
-        sh output-styler "start"
-	sh output-styler "middle"
+	echo ">>> PID Remove Config: PID Path=$PID_PATH_FULL, PID=$PID >>>"
+        sh OutputStyler "start"
+	sh OutputStyler "middle"
         echo "Filename: $file_name_full"
         echo "Version: v$version"
         echo "Run as user name: $run_as_user_name"
@@ -149,18 +204,23 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "PID File: $PID_PATH_FULL"
 	echo "PID Process ID: $PID"
 
-        if [ $sys_log_file_missing_switch -eq '1' ]; then
-                echo "Sys log file: $SYS_LOG is missing"
-                echo "Creating it at $SYS_LOG"
-        fi
+        if [ $OUTPUT_SWITCH -eq '1' ]; then
+		echo "Output to sys log file $SYS_LOG"
+		echo "Output to job log file $JOB_LOG"
+	fi
 
-        if [ $job_log_file_missing_switch -eq '1' ]; then
-                echo "Job log file: $JOB_LOG is missing"
-                echo "Creating it at $JOB_LOG"
-        fi
+	if [ $sys_log_file_missing_switch -eq '1' ]; then
+		echo "Sys log file: $SYS_LOG is missing"
+		echo "Creating it at $SYS_LOG"
+	fi
 
-        if [ $OUTPUT_SWITCH -eq '0' ]; then
-                echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
+	if [ $job_log_file_missing_switch -eq '1' ]; then
+		echo "Job log file: $JOB_LOG is missing"
+		echo "Creating it at $JOB_LOG"
+	fi
+
+	if [ $OUTPUT_SWITCH -eq '0' ]; then
+        echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
 	else
 		echo "Output to sys log file $SYS_LOG"
 		echo "Output to job log file $JOB_LOG"
@@ -170,14 +230,17 @@ fi
 ## Lets roll
 if [ -f "$PID_PATH_FULL" ]; then
         ## Get content of PID file
-        readarray -t pids_tmp < <(cat "$PID_PATH_FULL")
-        pids=$(echo "$pids_tmp" | grep "$PID")
+        readarray -t pids < <(cat "$PID_PATH_FULL" | grep "$PID")
+        #pids=$(echo "$pids_tmp" | grep "$PID")
         if [ $VERBOSE_SWITCH -eq '1' ]; then
-                echo "$pids"
-                echo "PIDs String Full: $pids_tmp"
+
+                for pid in "${!pids[@]}"
+                do
+                        echo "Array pids element $pid: ${pids[$pid]}"
+                done
         fi
         ## PID not found in PID file
-	if [ ${#pids_tmp[@]} -eq '0' ]; then
+	if [ ${#pids[@]} -eq '0' ]; then
                 echo "NO match found...in PID File $PID_PATH_FULL with PID $PID"
         else
                 ## PID found in PID file
@@ -203,7 +266,7 @@ if [ -f "$PID_PATH_FULL" ]; then
                 	if [ ${#pids_tmp[@]} -eq '0' ]; then
                         	## If PID file is empty
 				if [ $VERBOSE_SWITCH -eq '1' ]; then 
-                                echo "$PID_PATH_FULL is now empty... Deleting it"
+                                        echo "$PID_PATH_FULL is now empty... Deleting it"
 					trap 'rm -f -v -- $PID_PATH_FULL' EXIT #exit 0
 				else
 					trap 'rm -f -- $PID_PATH_FULL' EXIT #exit 0
@@ -216,7 +279,7 @@ if [ -f "$PID_PATH_FULL" ]; then
                                         exit $status
                 		else
                     			if [ $VERBOSE_SWITCH -eq '1' ]; then
-                                                echo "Removing empty PID File $PID_PATH_FULL finished"
+                                                echo "Removing empty PID File $PID_PATH_FULL finished successfully"
                                         fi
                 		fi
                 	fi
@@ -230,29 +293,31 @@ else
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-        sh output-styler "middle"
-        sh output-styler "end"
+        sh OutputStyler "middle"
+        sh OutputStyler "end"
 fi
 
 ## Check last task for errors
 status=$?
 if [ $status != 0 ]; then
         if [ $VERBOSE_SWITCH -eq '1' ]; then
-                sh output-styler "error"
+                sh OutputStyler "error"
         fi
-        echo "!!! Error Master Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
+        echo "!!! Error Sub Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
         if [ $VERBOSE_SWITCH -eq '1' ]; then
-                echo "!!! Master Module $file_name_full v$version stopped with error(s) !!!"
-                sh output-styler "error"
-                sh output-styler "end"
-                sh output-styler "end"
+                echo "!!! PID Remove Config: PID Path=$PID_PATH_FULL, PID=$PID !!!"
+                echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+                sh OutputStyler "error"
+                sh OutputStyler "end"
+                sh OutputStyler "end"
         fi
         exit $status
 else
         if [ $VERBOSE_SWITCH -eq '1' ]; then
-                echo "<<< Master Module $file_name_full v$version finished successfully <<<"
-                sh output-styler "end"
-                sh output-styler "end"
+                echo "<<< PID Remove Config: PID Path=$PID_PATH_FULL, PID=$PID <<<"
+                echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
+                sh OutputStyler "end"
+                sh OutputStyler "end"
         fi
         exit $status
 fi

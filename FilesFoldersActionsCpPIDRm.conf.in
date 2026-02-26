@@ -1,4 +1,4 @@
-### THIS A CONFIG FILE FOR FilesFoldersCpPIDRm.sh
+### THIS A CONFIG FILE FOR FilesFoldersActionsCpPIDRm.sh
 ## MODIFY IT BEHIND THE = ....NOTHING ELSE
 ## DON'T RENAME IT
 
@@ -11,10 +11,10 @@
 ## Parameter  6: Verbose Switch         0=Off
 ##                                      1=On; Default
 
-PID_PATH_FULL="/tmp/bash/files-folders-cp.pid"
+PID_PATH_FULL="/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp.pid"
 PID=98765
-SYS_LOG="/tmp/bash/${file_name}_sys.log"
-JOB_LOG="/tmp/bash/${file_name}_job.log"
+SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_sys.log"
+JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

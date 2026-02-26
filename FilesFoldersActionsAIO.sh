@@ -30,7 +30,7 @@
 ##                                  1=On; Default
 ##
 ## Call it like this:
-## sh files-folders-actions-aio.sh "/backup/internal/mysql/" "/backup/external/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "1" "1" "folders-folders-cp.sh" "folders-folders-rename.sh" "folders-folders-rm.sh" "1" "$HOME/bin/linux/shell/files-folders-actions/" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1" 
+## sh FilesFoldersActionsAIO.sh "/backup/internal/mysql/" "/backup/external/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "1" "1" "folders-folders-cp.sh" "folders-folders-rename.sh" "folders-folders-rm.sh" "1" "$HOME/bin/linux/shell/FilesFoldersActions/" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1" 
 
 ## Clear console to debug that stuff better
 #clear
@@ -40,7 +40,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="files-folders-aio.sh"
+file_name_full="FilesFoldersActionsAIO.sh"
 file_name="${file_name_full##*/}"
 
 run_as_user_name=$(whoami)
@@ -50,7 +50,7 @@ run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
 ## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
 echo "Using config file $config_file_in for $file_name_full"
 
 ## Check this script is running as root !
@@ -61,13 +61,13 @@ if [ "$run_as_user_uid" != "0" ]; then
 fi
 
 ## Clear used stuff
-declare    FILES_FOLDER_RENAME_CP_RM_PID
+declare    PID_PATH_FULL
 declare    FOLDER_SOURCE
 declare    FOLDER_TARGET
 declare    NAME_PART_OLD
 declare    NAME_PART_NEW
 declare    NAME_PART_DELETE
-# shellcheck disable=SC2034
+
 declare -i FOLDER_DEEP
 declare -i MODE_SWITCH
 declare    SCRIPT_SUB_FILE_FOLDERS_CP
@@ -84,85 +84,141 @@ declare -i sys_log_file_missing_switch
 declare -i job_log_file_missing_switch
 declare -i status
 
+# Set parameters
+PID_PATH_FULL=$1
+FOLDER_SOURCE=$2
+FOLDER_TARGET=$3
+NAME_PART_OLD=$4 
+NAME_PART_DELETE=$5
+FOLDER_DEEP=$6
+MODE_SWITCH=$7
+SCRIPT_SUB_FILE_FOLDERS_CP=$8
+SCRIPT_SUB_FILE_FOLDERS_RENAME=$9
+SCRIPT_SUB_FILE_FOLDERS_RM=${10}
+RECREATE_FOLDER_SWITCH=${11}
+SCRIPT_PATH=${12}
+SYS_LOG=${13}
+JOB_LOG=${14}
+OUTPUT_SWITCH=${15}
+VERBOSE_SWITCH=${16}
+
 ## Import stuff from config FILE
 set -o allexport
 # shellcheck source=$config_file_in disable=SC1091
 . "$config_file_in"
 set +o allexport
 
-# Check if $run_as_user_name:$run_as_group_name have write access to log FILEs
-if [ ! -w "${SYS_LOG%/*}" ] || [[ ! -w "${JOB_LOG%/*}" && "$OUTPUT_SWITCH" -eq '0' ]]; then
-    if [ ! -w "${SYS_LOG%/*}" ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for syslog FILE $SYS_LOG."
-    fi
-    if [ ! -w "${JOB_LOG%/*}" ] && [ "$OUTPUT_SWITCH" -eq '0' ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for job log FILE $JOB_LOG."
-    fi
-    echo "Please check the job config FILE $config_file_in. EXIT";exit 2
-fi
-
-# Set log files
-if [ ! -f "$SYS_LOG" ]; then
-        sys_log_file_missing_switch=1
-        touch "$SYS_LOG"
-else
-        sys_log_file_missing_switch=0
-fi
-
-if [ ! -f "$JOB_LOG" ]; then
-        job_log_file_missing_switch=1
-        touch "$JOB_LOG"
-else
-        job_log_file_missing_switch=0
-fi
-
+# Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
-        exec 3>&1 4>&2
-        trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
-        exec 1>>"$SYS_LOG" 2>&1
+
+        # Check if log files are set
+        if [ "$SYS_LOG" = "" ]; then
+                echo "System Log parameter is empty. EXIT"
+                exit 2
+        fi
+        
+        if [ "$JOB_LOG" = "" ]; then
+                echo "Job Log parameter is empty. EXIT"
+                exit 2
+        fi
+
+        if [ ! -d "${SYS_LOG%/*}" ]; then       
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        mkdir -pv "${SYS_LOG%/*}"
+                else
+                        mkdir -p "${SYS_LOG%/*}"
+                fi
+
+                sys_log_folder_missing_switch=1
+                sys_log_file_missing_switch=1
+        fi
+
+        # Check if user has write access to sys log file
+        if [ ! -w "${SYS_LOG%/*}" ]; then
+                echo "$run_as_user_name:$run_as_group_name don't have write access for sys log file $SYS_LOG. EXIT"
+        fi
+
+        if [ ! -d "${JOB_LOG%/*}" ]; then       
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        mkdir -pv "${JOB_LOG%/*}"
+                else
+                        mkdir -p "${JOB_LOG%/*}"
+                fi
+
+                job_log_folder_missing_switch=1
+                job_log_file_missing_switch=1
+        fi
+
+        # Check if user has write access to job log file
+	if [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "$run_as_user_name:$run_as_group_name don't have write access for job log file $JOB_LOG."
+	fi
+
+        if [ ! -w "${SYS_LOG%/*}" ] || \
+	   [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "Please check the job config FILE $config_file_in. EXIT"
+		exit 2
+	fi
+
+	# Set log files
+	if [ ! -f "$SYS_LOG" ]; then
+		sys_log_file_missing_switch=1
+		touch "$SYS_LOG"
+	fi
+
+	if [ ! -f "$JOB_LOG" ]; then
+		job_log_file_missing_switch=1
+		touch "$JOB_LOG"
+	fi
+
+	# Mod Output
+	exec 3>&1 4>&2
+	trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
+	exec 1>>"$SYS_LOG" 2>&1
 fi
 
 ## Print file name
 if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-	sh output-styler "start"
-	sh output-styler "start"
+	sh OutputStyler "start"
+	sh OutputStyler "start"
         echo ">>> Master Module $file_name_full v$version starting >>>"
 fi
 
 ## Check folder sources and targets in PID file
-. "$SCRIPT_PATH""files-folders-cp-pid-create.sh" "$FILES_FOLDER_RENAME_CP_RM_PID" $$ "$FOLDER_SOURCE" "$FOLDER_TARGET" "$OUTPUT" "$VERBOSE"
+# shellcheck source=$config_file_in disable=SC1091
+. "$SCRIPT_PATH""files-folders-cp-pid-create.sh" "$PID_PATH_FULL" "$$" "$FOLDER_SOURCE" "$FOLDER_TARGET" "$OUTPUT" "$VERBOSE"
 ## Check last task for error(s)
 status=$?
 if [ $status != 0 ]; then
-	echo "Error with PID $FILES_FOLDER_RENAME_CP_RM_PID and Check Copying from Folder Source $FOLDER_SOURCE to Folder Target $FOLDER_TARGET, code="$status;
+	echo "Error with PID $PID_PATH_FULL and Check Copying from Folder Source $FOLDER_SOURCE to Folder Target $FOLDER_TARGET, code="$status;
         if [ "$VERBOSE_SWITCH" -eq '1' ]; then
                 echo "!!! Master Module $file_name_full v$version stopped with error(s) !!!"
         fi
         exit $status
 else
         if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-                echo "Checking PID $FILES_FOLDER_RENAME_CP_RM_PID and Copying from Folder Source $FOLDER_SOURCE to Folder Target $FOLDER_TARGET finished"
+                echo "Checking PID $PID_PATH_FULL and Copying from Folder Source $FOLDER_SOURCE to Folder Target $FOLDER_TARGET finished"
         fi
 fi
 
 ## Remove PID entry from PID file or the hole PID file when job is finished
-echo "When job is done clean from PID $FILES_FOLDER_RENAME_CP_RM_PID PID Process ID $$ entry"
+echo "When job is done clean from PID $PID_PATH_FULL PID Process ID $$ entry"
 # shellcheck disable=SC2154
-echo ". "$SCRIPT_PATH""files-folders-cp-pid-rm.sh" $FILES_FOLDER_RENAME_CP_RM_PID $$ $OUTPUT $VERBOSE"
-trap '. -- $SCRIPT_PATH"files-folders-cp-pid-rm.sh" '"$FILES_FOLDER_RENAME_CP_RM_PID"' '$$' '"$OUTPUT"' '"$VERBOSE"' ' EXIT
+echo ". ${SCRIPT_PATH}files-folders-cp-pid-rm.sh" $PID_PATH_FULL $$ $OUTPUT $VERBOSE"
+trap '. -- ${SCRIPT_PATH}files-folders-cp-pid-rm.sh" '"$PID_PATH_FULL"' '$$' '"$OUTPUT"' '"$VERBOSE"' ' EXIT
 
 ## Check last task for error(s)
 status=$?
 if [ $status != 0 ]; then
         # shellcheck disable=SC2154
-        echo "Error with PID $FILES_FOLDER_RENAME_CP_RM_PID and finding PID Process ID $PID_process_id, code=$status";
+        echo "Error with PID $PID_PATH_FULL and finding PID Process ID $PID_process_id, code=$status";
         if [ "$VERBOSE_SWITCH" -eq '1' ]; then
                 echo "!!! Master Module $file_name_full v$version stopped with error(s) !!!"
         fi
         exit $status
 else
         if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-                echo "Removing entry in PID $FILES_FOLDER_RENAME_CP_RM_PID with PID Process ID $PID_process_id finished"
+                echo "Removing entry in PID $PID_PATH_FULL with PID Process ID $PID_process_id finished"
         fi
 fi
 
@@ -174,14 +230,14 @@ fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
         if [ $OUTPUT_SWITCH -eq '1' ]; then
-	        sh output-styler "start"
-        	sh output-styler "start"
+	        sh OutputStyler "start"
+        	sh OutputStyler "start"
                 echo ">>> Master Module $file_name_full v$version starting >>>"
         fi
 
-        sh output-styler "start"
-	sh output-styler "start"
-	sh output-styler "middle"
+        sh OutputStyler "start"
+	sh OutputStyler "start"
+	sh OutputStyler "middle"
 	echo "!!! ATTENTION !!!		Parameter 3: Name Part Old i.e. current*					   !!! ATTENTION !!!"
         echo "!!! ATTENTION !!!		ONLY wildcards at the beginning and at the end with other real content will work   !!! ATTENTION !!!"
         echo "!!! ATTENTION !!!		ONLY wildcards with no other real content will NOT work				   !!! ATTENTION !!!"
@@ -286,7 +342,7 @@ if [ ! -d "$SCRIPT_PATH" ]; then
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-        echo "Files Folder Rename Copy Remove PID: $FILES_FOLDER_RENAME_CP_RM_PID"
+        echo "Files Folder AIO PID: $PID_PATH_FULL"
         echo "Folder source: $FOLDER_SOURCE"
         echo "Folder target: $FOLDER_TARGET"
         echo "Name part old: $NAME_PART_OLD" 
@@ -294,7 +350,7 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
         echo "Name part delete: $NAME_PART_DELETE"
         echo "Script path: $SCRIPT_PATH"
         echo "Folder deep: $FOLDER_DEEP"
-        echo "Mde switch: $MODE_SWITCH"
+        echo "Mode switch: $MODE_SWITCH"
         echo "Recreate folder switch: $RECREATE_FOLDER_SWITCH"
         echo "Sys log: $SYS_LOG"
         echo "Job log: $JOB_LOG"
@@ -304,6 +360,7 @@ fi
 
 ## Lets roll
 ## Copy file(s) and/or folder(s) from source to target folder
+# shellcheck disable=SC1090
 . "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
         "$FOLDER_SOURCE" \
         "$FOLDER_TARGET" \
@@ -314,6 +371,7 @@ fi
         "$VERBOSE_SWITCH"
 
 ## Rename file(s) and/or folder(s) at source folder
+# shellcheck disable=SC1090
 . "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
         "$NAME_PART_OLD" \
         "$NAME_PART_NEW" \
@@ -325,6 +383,7 @@ fi
         "$VERBOSE_SWITCH"
 
 ## Rename file(s) and/or folder(s) at target folder
+# shellcheck disable=SC1090
 . "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
         "$NAME_PART_OLD" \
         "$NAME_PART_NEW" \
@@ -336,6 +395,7 @@ fi
         "$VERBOSE_SWITCH"
 
 ## Remove file(s) and/or folder(s) at source folder
+# shellcheck disable=SC1090
 . "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RM" \
         "$FOLDER_SOURCE" \
         "$NAME_PART_DELETE" \
@@ -345,39 +405,40 @@ fi
         "$VERBOSE_SWITCH"
 
 ## For testing: Copy back testing file(s) and/or folder(s)
+# shellcheck disable=SC1090
 . "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
-        "/home/backup/mysql/full/" \
-        "/backup/internal/mysql/" \
+        "/home/.backup/mysql/full/" \
+        "/home/.backup/mysql/" \
         "*" \
         "2" \
         "1" \
         "0"
 
 if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-        sh output-styler "middle"
-        sh output-styler "end"
-        sh output-styler "end"
+        sh OutputStyler "middle"
+        sh OutputStyler "end"
+        sh OutputStyler "end"
 fi
 
 ## Check last task for errors
 status=$?
 if [ $status != 0 ]; then
 	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-                sh output-styler "error"
+                sh OutputStyler "error"
         fi
         echo "!!! Error Master Module $file_name_full from $FOLDER_SOURCE to $FOLDER_TARGET, code=$status !!!"
         if [ "$VERBOSE_SWITCH" -eq '1' ]; then
                 echo "!!! Master Module $file_name_full v$version stopped with error(s) !!!"
-		sh output-styler "error"
-		sh output-styler "end"
-	        sh output-styler "end"
+		sh OutputStyler "error"
+		sh OutputStyler "end"
+	        sh OutputStyler "end"
         fi
         exit $status
 else
         if [ "$VERBOSE_SWITCH" -eq '1' ]; then
                 echo "<<< Master Module $file_name_full v$version finished successfully <<<"
-                sh output-styler "end"
-                sh output-styler "end"
+                sh OutputStyler "end"
+                sh OutputStyler "end"
         fi
         exit $status
 fi

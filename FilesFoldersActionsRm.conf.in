@@ -1,4 +1,4 @@
-### THIS A CONFIG FILE FOR FilesFoldersRm.sh
+### THIS A CONFIG FILE FOR FilesFoldersActionsRm.sh
 ## MODIFY IT BEHIND THE = ....NOTHING ELSE
 ## DON'T RENAME IT
 
@@ -15,12 +15,13 @@
 ## Parameter 8: Verbose Switch     	0=Off
 ##                                 	1=On; Default
 
-FOLDER_TARGET="/home/.backup/mysql/"
-NAME_PART="$(date +%y%m%d*)" 
+FOLDER_TARGET="/home/.backup/mysql/sub/"
+#NAME_PART="$(date +%y%m%d*)"
+NAME_PART="current*" 
 MODE_SWITCH=1
 FOLDER_DEEP=1
-SYS_LOG="/tmp/bash/${file_name}_sys.log"
-JOB_LOG="/tmp/bash/${file_name}_job.log"
+SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsRm_sys.log"
+JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsRm_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

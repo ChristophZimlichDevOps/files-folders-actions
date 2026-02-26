@@ -1,0 +1,9 @@
+ sh FilesFoldersActionsCpPIDCreate.sh \
+    "/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp.pid" \
+    "51822" \
+    "/home/.backup/mysql/" \
+    "/tmp/bash/FilesFoldersActions/" \
+	"/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_sys.log" \
+	"/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_job.log" \
+    "0" \
+    "1"

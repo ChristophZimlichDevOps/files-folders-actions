@@ -1,0 +1,14 @@
+sh FilesFoldersActionsCp.sh \
+	"/tmp/bash/$file_name/$file_name.pid" \
+	"/home/backup/mysql/" \
+	"/tmp/bash/$file_name/" \
+	"current*" \
+	"1" \
+	"1" \
+	"$HOME/bin/linux/shell/FilesFoldersActions.loc/" \
+	"FilesFoldersActionsCpPIDCreate.sh" \
+	"FilesFoldersActionsCpPIDRm.sh" \
+	"/tmp/bash/$file_name/${file_name}_sys.log" \
+	"/tmp/bash/$file_name/${file_name}_job.log" \
+	"0" \
+	"1"

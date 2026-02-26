@@ -25,7 +25,7 @@
 ##                                  	1=On; Default
 ##
 ## Call it like this:
-## sh files-folders-rename.sh "current*" "$(date +%y%m%d%H%M%S)" "/home/backup/mysql/" "0" "1" "0" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
+## sh FilesFoldersActionsRename.sh "current*" "$(date +%y%m%d%H%M%S)" "/home/backup/mysql/" "0" "1" "0" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
 
 ## Clear console to debug that stuff better
 #clear
@@ -35,7 +35,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="files-folders-rename.sh"
+file_name_full="FilesFoldersActionsRename.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
@@ -64,15 +64,31 @@ declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Needed for processing
 declare    config_file_in
-declare -i sys_log_file_missing_switch
-declare -i job_log_file_missing_switch
 declare    mode
 declare    name_part_old_clean
 declare -a files
+declare -i sys_log_folder_missing_switch=0
+declare -i sys_log_file_missing_switch=0
+declare -i job_log_folder_missing_switch=0
+declare -i job_log_file_missing_switch=0
 declare -i status
 
+## Set parameters
+NAME_PART_OLD=$1 
+NAME_PART_NEW=$2
+FOLDER_TARGET=$3
+MODE_SWITCH=$4
+FOLDER_DEEP=$5
+RECREATE_FOLDER_SWITCH=$5
+SCRIPT_PATH=$6
+SCRIPT_SUB_FILE_FOLDERS_MV=$7
+SYS_LOG=$8
+JOB_LOG=$9
+OUTPUT_SWITCH=${10}
+VERBOSE_SWITCH=${11}
+
 ## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/files-folders-actions/$file_name.conf.in"
+config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
 echo "Using config file $config_file_in for $file_name_full"
 
 ## Import stuff from config FILE
@@ -81,33 +97,70 @@ set -o allexport
 . "$config_file_in"
 set +o allexport
 
-# Check if $run_as_user_name:$run_as_group_name have write access to log FILEs
-if [ ! -w "${SYS_LOG%/*}" ] || [[ ! -w "${JOB_LOG%/*}" && "$OUTPUT_SWITCH" -eq '0' ]]; then
-    if [ ! -w "${SYS_LOG%/*}" ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for syslog FILE $SYS_LOG."
-    fi
-    if [ ! -w "${JOB_LOG%/*}" ] && [ "$OUTPUT_SWITCH" -eq '0' ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for job log FILE $JOB_LOG."
-    fi
-    echo "Please check the job config FILE $config_file_in. EXIT";exit 2
-fi
+# Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
+if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
-# Set log files
-if [ ! -f "$SYS_LOG" ]; then
-	sys_log_file_missing_switch=1
-	touch "$SYS_LOG"
-else
-	sys_log_file_missing_switch=0
-fi
+        # Check if log files are set
+        if [ "$SYS_LOG" = "" ]; then
+                echo "System Log parameter is empty. EXIT"
+                exit 2
+        fi
+        
+        if [ "$JOB_LOG" = "" ]; then
+                echo "Job Log parameter is empty. EXIT"
+                exit 2
+        fi
 
-if [ ! -f "$JOB_LOG" ]; then
-    job_log_file_missing_switch=1
-	touch "$JOB_LOG"
-else
-    job_log_file_missing_switch=0
-fi
+        if [ ! -d "${SYS_LOG%/*}" ]; then       
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        mkdir -pv "${SYS_LOG%/*}"
+                else
+                        mkdir -p "${SYS_LOG%/*}"
+                fi
 
-if [ $OUTPUT_SWITCH -eq '1' ]; then
+                sys_log_folder_missing_switch=1
+                sys_log_file_missing_switch=1
+        fi
+
+        # Check if user has write access to sys log file
+        if [ ! -w "${SYS_LOG%/*}" ]; then
+                echo "$run_as_user_name:$run_as_group_name don't have write access for sys log file $SYS_LOG. EXIT"
+        fi
+
+        if [ ! -d "${JOB_LOG%/*}" ]; then       
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        mkdir -pv "${JOB_LOG%/*}"
+                else
+                        mkdir -p "${JOB_LOG%/*}"
+                fi
+
+                job_log_folder_missing_switch=1
+                job_log_file_missing_switch=1
+        fi
+
+        # Check if user has write access to job log file
+	if [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "$run_as_user_name:$run_as_group_name don't have write access for job log file $JOB_LOG."
+	fi
+
+        if [ ! -w "${SYS_LOG%/*}" ] || \
+	   [ ! -w "${JOB_LOG%/*}" ]; then
+		echo "Please check the job config FILE $config_file_in. EXIT"
+		exit 2
+	fi
+
+	# Set log files
+	if [ ! -f "$SYS_LOG" ]; then
+		sys_log_file_missing_switch=1
+		touch "$SYS_LOG"
+	fi
+
+	if [ ! -f "$JOB_LOG" ]; then
+		job_log_file_missing_switch=1
+		touch "$JOB_LOG"
+	fi
+
+	# Mod Output
 	exec 3>&1 4>&2
 	trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
 	exec 1>>"$SYS_LOG" 2>&1
@@ -127,7 +180,7 @@ fi
 
 ## Print file name
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh output-styler "start"
+	sh OutputStyler "start"
     echo ">>> Sub Module $file_name_full v$version starting >>>"
 	echo ">>> Rename Config: Name Part Old=$NAME_PART_OLD, Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode >>>"
 fi
@@ -143,14 +196,14 @@ fi
 ## Print file name
 if [ "$VERBOSE_SWITCH" -eq '1' ]; then
     if [ "$OUTPUT_SWITCH" -eq '1' ]; then
-        sh output-styler "start"
-        sh output-styler "start"
+        sh OutputStyler "start"
+        sh OutputStyler "start"
         echo ">>> Sub Module $file_name_full v$version starting >>>"
     fi
 
-    sh output-styler "start"
-    sh output-styler "start"
-    sh output-styler "middle"
+    sh OutputStyler "start"
+    sh OutputStyler "start"
+    sh OutputStyler "middle"
     echo "Filename: $file_name_full"
     echo "Version: v$version"
     echo "Run as user name: $run_as_user_name"
@@ -158,7 +211,8 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
     echo "Run as group: $run_as_group_name"
     echo "Run as group gid: $run_as_group_gid"
     echo "Run on host: $run_on_hostname"
-
+	echo "Verbose is ON"
+	
 	echo -n "Renaming file(s) is "
 	if [ "$MODE_SWITCH" -gt '1' ]; then
 		echo "OFF"
@@ -203,7 +257,7 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 		echo "Output to job log file $JOB_LOG"
 	fi
 
-    echo "Verbose is ON"
+    
 	echo "!!! ATTENTION !!!         	Parameter 1: Name Part Old i.e. current* 	    	                               !!! ATTENTION !!!"
 	echo "!!! ATTENTION !!!         	ONLY wildcards at the beginning and at the end with other real content will work   !!! ATTENTION !!!"
 	echo "!!! ATTENTION !!!         	ONLY wildcards with no other real content will NOT work                            !!! ATTENTION !!!"
@@ -261,98 +315,106 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Renaming $mode in $FOLDER_TARGET with name like $NAME_PART_OLD to $NAME_PART_NEW started"
 fi
 
-## Start renaming all files in array
+## Start renaming all file(s) in array
 if [ $MODE_SWITCH -lt '2' ]; then
 
-	readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" -ls | cut -b 91- )
+	readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD")
 	
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
 		echo "This will effect the following ${#files[@]} x file(s)..."
 		for file in "${!files[@]}"
 		do
-			echo "Array files element $file: ${files[$file]}"
+			echo "Array file(s) element $file: ${files[$file]}"
 		done
 	fi
 
 	if [ ${#files[@]} -eq '0' ]; then
-		echo "No file(s) to rename at $FOLDER_TARGET$NAME_PART_OLD."
+		echo "No file(s) to rename at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW"
+		exit 1
+	fi
+
+	if [ $VERBOSE_SWITCH -eq '1'  ]; then
+		echo "Starting renaming file(s) at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW..."
+		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" \
+			-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
 	else
-		for file in "${!files[@]}"
-		do
-			if [ $VERBOSE_SWITCH -eq '1' ]; then
-				echo "Working on file: ${files[$file]}"
-			fi
+		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" \
+			-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+	fi
 
-			if [ ! -f "${files[$file]}" ]; then
-				echo "File Path ${files[$file]} is not a valid. Go to next one. NEXT"
-				break
-			fi
-
-			if [ $VERBOSE_SWITCH -eq '1' ]; then
-				rename -v "$name_part_old_clean" "$NAME_PART_NEW" "${files[$file]}"
-			else
-				rename "$name_part_old_clean" "$NAME_PART_NEW" "${files[$file]}"
-        	fi
-
-        	## Check last task for errors
-        	status=$?
-        	if [ $status != 0 ]; then
-				echo "Error renaming file ${files[$file]} to ${files[$file]/$name_part_old_clean/$NAME_PART_NEW}, code="$status;
-				echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-				break
-				exit $status
-        	else
-				if [ $VERBOSE_SWITCH -eq '1' ]; then
-					echo "Renaming file ${files[$file]} to ${files[$file]/$name_part_old_clean/$NAME_PART_NEW} finished successfully"
-				fi
-        	fi
-		done
+	## Check last task for errors
+	status=$?
+	if [ $status != 0 ]; then
+		echo "Error renaming file ${files[$file]} to ${files[$file]/$name_part_old_clean/$NAME_PART_NEW}, code="$status;
+		echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+		exit $status
+	else
+		if [ $VERBOSE_SWITCH -eq '1' ]; then
+			echo "Renaming file(s) at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW} finished successfully"
+		fi
 	fi
 fi
 
-## Start renaming all folders in array
-if [ $MODE_SWITCH -gt '0' ]; then
-	if [ $VERBOSE_SWITCH -eq '1' ]; then
-		sh output-styler "part"
-	fi
+## Start renaming all folder(s) in array
+if [ $MODE_SWITCH -lt '2' ]; then
 
-	## Call sub module for renaming...better moving folders
-    # shellcheck disable=SC1090
-    . "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_MV" \
-		"$FOLDER_TARGET" \
-		"$NAME_PART_OLD" \
-		"$NAME_PART_NEW" \
-		"$FOLDER_DEEP" \
-		"$RECREATE_FOLDER_SWITCH" \
-		"$OUTPUT_SWITCH" \
-		"$VERBOSE_SWITCH"
-
-	if [ $VERBOSE_SWITCH -eq '1' ]; then
-		sh output-styler "part"
-	fi
+	readarray -t folders < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD")
 	
+	if [ $VERBOSE_SWITCH -eq '1'  ]; then
+		echo "This will effect the following ${#folders[@]} x folder(s)..."
+		for folder in "${!folders[@]}"
+		do
+			echo "Array folder(s) element $folder: ${folders[$folder]}"
+		done
+	fi
+
+	if [ ${#folders[@]} -eq '0' ]; then
+		echo "No folder(s) to rename at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW"
+		exit 1
+	fi
+
+	if [ $VERBOSE_SWITCH -eq '1'  ]; then
+		echo "Starting renaming folder(s) at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW..."
+		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
+			-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+	else
+		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
+			-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+	fi
+
+	## Check last task for errors
+	status=$?
+	if [ $status != 0 ]; then
+		echo "Error renaming folder(s) at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW, code="$status;
+		echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+		exit $status
+	else
+		if [ $VERBOSE_SWITCH -eq '1' ]; then
+			echo "Renaming folder(s) at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW finished successfully"
+		fi
+	fi
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh output-styler "middle"
-	sh output-styler "end"
+	sh OutputStyler "middle"
+	sh OutputStyler "end"
 fi
 
 status=$?
 if [ $status != 0 ]; then
-	sh output-styler "error"
+	sh OutputStyler "error"
 	echo "!!! Error renaming $mode at $FOLDER_TARGET from $name_part_old_clean to $NAME_PART_NEW, code=$status !!!"
 	echo "!!! Rename Config: $mode Name Part Old=$NAME_PART_OLD, $mode Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode !!!"
 	echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-	sh output-styler "error"
-    sh output-styler "end"
+	sh OutputStyler "error"
+    sh OutputStyler "end"
 	exit $status
 else
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "<<< Renaming $mode at $FOLDER_TARGET from $name_part_old_clean to $NAME_PART_NEW finished <<<"
 		echo "<<< Rename Config: $mode Name Part Old=$NAME_PART_OLD, $mode Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode <<<"
 		echo "<<< Sub Module $file_name_full v$version finished successfully <<<"
-		sh output-styler "end"
+		sh OutputStyler "end"
 	fi
 	exit $status
 fi

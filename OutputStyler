@@ -12,8 +12,8 @@
 ## Parameter 3: Verbose Switch "-v"=On, else=Off
 ##
 ## Call it like this:
-## sh output-styler "start"
-## sh output-styler "error" "--console" "-v"
+## sh OutputStyler "start"
+## sh OutputStyler "error" "--console" "-v"
 
 ## Clear console to debug that stuff better
 #clear
@@ -23,7 +23,7 @@
 
 ## Set Stuff
 version="0.0.1"
-file_name_full="output-styler"
+file_name_full="OutputStyler"
 log="/tmp/$file_name_full.log"
 
 #output_length=136
@@ -54,13 +54,13 @@ verbose=$3
 ## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
 ## is running. If another instance is running we pause for 5 seconds and then delete the PID anyway. Normally this script will run
 ## in under 150ms and via cron runs every 60 seconds, so if the PID file still exists after 1 seconds then it's a orphan PID file.
-#if [ -f "$output-stylerPID" ]; then
+#if [ -f "$OutputStylerPID" ]; then
 #        sleep 1 #if PID file exists wait 1 seconds and test again, if it still exists delete it and carry on
-#        echo "There appears to be another Process $file_name_full PID $output-stylerPID is already running, waiting for 5 seconds ..."
-#        rm -f -- "$output-stylerPID"
+#        echo "There appears to be another Process $file_name_full PID $OutputStylerPID is already running, waiting for 5 seconds ..."
+#        rm -f -- "$OutputStylerPID"
 #fi
-#trap 'rm -f -- $output-stylerPID' EXIT #(code=exited, status=0/SUCCESS)
-#echo $$ > "$output-stylerPID"
+#trap 'rm -f -- $OutputStylerPID' EXIT #(code=exited, status=0/SUCCESS)
+#echo $$ > "$OutputStylerPID"
 
 ## Set switches
 if [ "$part" = start ]; then
