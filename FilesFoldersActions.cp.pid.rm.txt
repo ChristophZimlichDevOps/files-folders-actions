@@ -1,7 +1,7 @@
  sh FilesFoldersActions.cp.pid.rm.sh \
-    "/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp.pid" \
+    "/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp.pid" \
     "51822" \
-	"/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_sys.log" \
-	"/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_job.log" \
+	"/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp_sys.log" \
+	"/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp_job.log" \
     "0" \
     "1"

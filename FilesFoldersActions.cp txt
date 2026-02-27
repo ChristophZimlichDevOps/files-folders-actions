@@ -6,8 +6,8 @@ sh FilesFoldersActionsCp.sh \
 	"1" \
 	"1" \
 	"$HOME/bin/linux/shell/FilesFoldersActions.loc/" \
-	"FilesFoldersActionsCpPIDCreate.sh" \
-	"FilesFoldersActionsCpPIDRm.sh" \
+	"FilesFoldersActions.cp.pid.create.sh" \
+	"FilesFoldersActions.cp.pid.rm.sh" \
 	"/tmp/bash/$file_name/${file_name}_sys.log" \
 	"/tmp/bash/$file_name/${file_name}_job.log" \
 	"0" \

@@ -14,8 +14,8 @@
 ##                                  1=Copy files and folders
 ##                                  2=Copy only folders
 ## Parameter  6: Script path i.e.   "/root/bin/linux/shell/FilesFoldersActions/"
-## Parameter  7: Sub Script for creating PID i.e. "FilesFoldersActions.cpPIDCreate.sh"
-## Parameter  8: Sub Script for removing PID i.e. "FilesFoldersActions.cpPIDRm.sh"
+## Parameter  7: Sub Script for creating PID i.e. "FilesFoldersActions.cp.pid.create.sh"
+## Parameter  8: Sub Script for removing PID i.e. "FilesFoldersActions.cp.pid.rm.sh"
 ## Parameter  9: Sys log i.e.		"/var/log/bash/$file_name.log"
 ## Parameter 10: Job log i.e.		"/tmp/bash/$file_name.log"
 ## Parameter 11: Output Switch      0=Console
@@ -32,8 +32,8 @@
 ##		"1" \
 ##		"1" \
 ##		"$HOME/bin/linux/shell/FilesFoldersActions/" \
-##		"FilesFoldersActions.cpPIDCreate.sh" \
-##		"FilesFoldersActions.cpPIDRm.sh" \
+##		"FilesFoldersActions.cp.pid.create.sh" \
+##		"FilesFoldersActions.cp.pid.rm.sh" \
 ##		"/var/log/bash/$file_name.log" \
 ##      "/tmp/bash/$file_name.log" \
 ##		"0" \

@@ -1,11 +1,11 @@
- sh FilesFoldersActions.rename.sh \
-    "current*" \
-    "$(date +%y%m%d%H%M%S)" \
-    "/home/backup/mysql/" \
-    "0" \
-    "1" \
-    "0" \
-    "/var/log/bash/$file_name.log" \
-    "/tmp/bash/$file_name.log" \
-    "0" \
-    "1"
+sh FilesFoldersActions.rename.sh \
+   "current*" \
+   "$(date +%y%m%d%H%M%S)" \
+   "/home/backup/mysql/" \
+   "0" \
+   "1" \
+   "0" \
+   "/var/log/bash/$file_name.log" \
+   "/tmp/bash/$file_name.log" \
+   "0" \
+   "1"
