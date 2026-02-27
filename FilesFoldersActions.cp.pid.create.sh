@@ -68,6 +68,7 @@ declare -a pids_source
 declare -a pids_target
 declare -a pids_tmp
 declare -i pid_folder_missing_switch
+declare -i pid_file_missing_switch=0
 declare -i folder_target_missing_switch
 declare -i sys_log_folder_missing_switch=0
 declare -i sys_log_file_missing_switch=0
@@ -86,7 +87,7 @@ OUTPUT_SWITCH=$7
 VERBOSE_SWITCH=$8
 
 ## Set the job config file from parameter
-config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
+config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
 echo "Using config file $config_file_in for $file_name_full"
 
 ## Import stuff from config file
@@ -169,12 +170,20 @@ fi
 ## is running. If another instance is running we pause for 5 seconds and then delete the PID anyway. Normally this script will run
 ## in under 150ms and via cron runs every 60 seconds, so if the PID file still exists after 5 seconds then it's a orphan PID file.
 if [ -f "$PID_PATH_FULL" ]; then
-        sleep 5 #if PID file exists wait 3 seconds and test again, if it still exists delete it and carry on
-        echo "There appears to be another Process $file_name PID $PID_PATH_FULL is already running, waiting for 5 seconds ..."
-        rm -f -- "$PID_PATH_FULL"
+        if [ "$(cat "$PID_PATH_FULL" | grep $PID)" != "" ]; then
+                echo "There is already an entry in PID file $PID_PATH_FULL with PID $PID. EXIT"
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        echo "Please check this. THANKS"
+                        echo "I will now quit"
+                fi
+                exit 2
+        fi
+
+        #sleep 5 #if PID file exists wait 3 seconds and test again, if it still exists delete it and carry on
+        #echo "There appears to be another Process $file_name PID $PID_PATH_FULL is already running, waiting for 5 seconds ..."
+        #rm -f -- "$PID_PATH_FULL"
 fi
-trap 'rm -f -- $PID_PATH_FULL' EXIT #EXIT STATUS=0/SUCCESS)
-echo $$ > "$PID_PATH_FULL"
+#trap 'echo $PID "\"$FOLDER_SOURCE"\" "\"$FOLDER_TARGET"\"  >> $PID_PATH_FULL' exit
 
 if [ "$PID" = "" ]; then
         echo "PID Process ID is empty"
@@ -183,9 +192,10 @@ fi
 
 if [ ! -f "$PID_PATH_FULL" ]; then
         echo "PID file $PID_PATH_FULL not found"
+        pid_file_missing_switch=1
 fi
 
-# Check if user has write access to sys log file
+# Check if pid folder exists
 if [ ! -d "${PID_PATH_FULL%/*}" ]; then
         if [ $VERBOSE_SWITCH -eq '1' ]; then
                 mkdir -pv "${PID_PATH_FULL%/*}"
@@ -227,13 +237,15 @@ if [ ! -w "${FOLDER_TARGET%/*}" ]; then
 fi
 
 ## Print file name
+if [ "$OUTPUT_SWITCH" -eq '1' ] && \
+   [ "$VERBOSE_SWITCH" -eq '0' ]; then
+        sh OutputStyler "start"
+        sh OutputStyler "start"
+        echo ">>> Sub Module $file_name_full v$version starting >>>"
+        echo ">>> PID Create Config: PID Path=$PID_PATH_FULL, PID=$PID, Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET >>>"
+fi
+
 if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-        if [ "$OUTPUT_SWITCH" -eq '1' ]; then
-	        sh OutputStyler "start"
-        	sh OutputStyler "start"
-                echo ">>> Sub Module $file_name_full v$version starting >>>"
-                echo ">>> PID Create Config: PID Path=$PID_PATH_FULL, PID=$PID, Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET >>>"
-        fi
         sh OutputStyler "start"
 	sh OutputStyler "start"
         echo ">>> Sub Module $file_name_full v$version starting >>>"
@@ -251,10 +263,15 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 	echo "Folder Source: $FOLDER_SOURCE"
         echo "Folder Target: $FOLDER_TARGET"
         echo "Verbose is ON"
-
+        
         if [ "$pid_folder_missing_switch" -eq '1' ]; then
                 echo "PID folder: ${PID_PATH_FULL%/*} is missing"
                 echo "Creating it at ${PID_PATH_FULL%/*}"
+        fi
+
+        if [ "$pid_file_missing_switch" -eq '1' ]; then
+                echo "PID file: $PID_PATH_FULL is missing"
+                echo "Creating it at $PID_PATH_FULL"
         fi
 
         if [ "$folder_target_missing_switch" -eq '1' ]; then
@@ -434,9 +451,21 @@ if [ -f "$PID_PATH_FULL" ]; then
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
 			echo "No Cross Copy Match found in PID $PID_PATH_FULL Folder Source $FOLDER_SOURCE Folder Target $FOLDER_TARGET"
 		        echo "Updating PID $PID_PATH_FULL with PID $PID, folder source $FOLDER_SOURCE and folder target $FOLDER_TARGET"
-                        echo "$PID $FOLDER_SOURCE $FOLDER_TARGET"
+                        echo "$PID "\"$FOLDER_SOURCE"\" "\"$FOLDER_TARGET"\""
                 fi
-		echo "$PID" "$FOLDER_SOURCE" "$FOLDER_TARGET" >> "$PID_PATH_FULL"
+
+		echo "$PID" "\"$FOLDER_SOURCE"\" "\"$FOLDER_TARGET"\" >> "$PID_PATH_FULL"
+
+                ## Check if the job has worked correctly
+                if [ "$(cat "$PID_PATH_FULL" | grep $PID)" != "" ]; then
+                        if [ $VERBOSE_SWITCH -eq '1' ]; then
+                                echo "PID entry for $PID was created successfully in $PID_PATH_FULL"
+                        fi
+                else
+                        echo "There was a problem creating the entry for PID $PID in PID $PID_PATH_FULL"
+                        exit 1
+                fi
+
         fi
 ## If no PID exists... create it
 else
@@ -446,7 +475,20 @@ else
                 echo "Folder Source $FOLDER_SOURCE"
                 echo "Folder Target $FOLDER_TARGET"
         fi
+
         echo "$PID" "\"$FOLDER_SOURCE"\" "\"$FOLDER_TARGET"\" > "$PID_PATH_FULL"
+
+        ## Check if the job has worked correctly
+        if [ -f "$PID_PATH_FULL" ]; then
+                if [ "$(cat "$PID_PATH_FULL" | grep $PID)" != "" ]; then
+                        if [ $VERBOSE_SWITCH -eq '1' ]; then
+                                echo "PID file $PID_PATH_FULL was created successfully"
+                        fi
+                fi
+        else
+                echo "There was a problem creating the PID file $PID_PATH_FULL with PID $PID"
+                exit 1
+        fi
 fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then

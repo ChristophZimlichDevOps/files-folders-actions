@@ -274,21 +274,16 @@ if [ "$FOLDER_DEEP" = "" ] || \
 fi
 
 ## Print file name
-if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh OutputStyler "start"
-	echo ">>> Sub Module $file_name_full v$version starting >>>"
-	echo ">>> Copy Config: Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET, \
-	Copy $mode Name Part=$NAME_PART, Mode=$mode >>>"
+if [ "$OUTPUT_SWITCH" -eq '1' ] && \
+   [ "$VERBOSE_SWITCH" -eq '0' ]; then
+        sh OutputStyler "start"
+        sh OutputStyler "start"
+        echo ">>> Sub Module $file_name_full v$version starting >>>"
+        echo ">>> PID Create Config: PID Path=$PID_PATH_FULL, PID=$PID, Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET >>>"
 fi
 
 ## Talk to you if you want
 if [ $VERBOSE_SWITCH -eq '1' ]; then
-	if [ $OUTPUT_SWITCH -eq '1' ]; then
-		sh OutputStyler "start"
-		echo ">>> Sub Module $file_name_full v$version starting >>>"
-		echo ">>> Copy Config: Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET, \
-		Copy $mode Name Part=$NAME_PART, Mode=$mode >>>"
-	fi
 	sh OutputStyler "start"
 	sh OutputStyler "middle"
 	echo "Filename: $file_name_full"

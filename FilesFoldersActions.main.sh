@@ -192,13 +192,6 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	exec 1>>"$SYS_LOG" 2>&1
 fi
 
-## Print file name
-if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-	sh OutputStyler "start"
-	sh OutputStyler "start"
-        echo ">>> Master Module $file_name_full v$version starting >>>"
-fi
-
 ## Check folder sources and targets in PID file
 # shellcheck source=$config_file_in disable=SC1091
 . "$SCRIPT_PATH""files-folders-cp-pid-create.sh" "$PID_PATH_FULL" "$$" "$FOLDER_SOURCE" "$FOLDER_TARGET" "$OUTPUT" "$VERBOSE"
@@ -243,13 +236,15 @@ if [ "$FOLDER_DEEP" = "" ] || \
         echo "Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1";FOLDER_DEEP=1
 fi
 
-if [ $VERBOSE_SWITCH -eq '1' ]; then
-        if [ $OUTPUT_SWITCH -eq '1' ]; then
-	        sh OutputStyler "start"
-        	sh OutputStyler "start"
-                echo ">>> Master Module $file_name_full v$version starting >>>"
-        fi
+if [ "$OUTPUT_SWITCH" -eq '1' ] && \
+   [ "$VERBOSE_SWITCH" -eq '0' ]; then
+        sh OutputStyler "start"
+        sh OutputStyler "start"
+        echo ">>> Sub Module $file_name_full v$version starting >>>"
+        echo ">>> PID Create Config: PID Path=$PID_PATH_FULL, PID=$PID, Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET >>>"
+fi
 
+if [ $VERBOSE_SWITCH -eq '1' ]; then
         sh OutputStyler "start"
 	sh OutputStyler "start"
 	sh OutputStyler "middle"
