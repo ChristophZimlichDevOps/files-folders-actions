@@ -16,8 +16,8 @@
 ##                                      1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersActionsCpPIDRm.sh \
-##      "/var/run/FilesFoldersActionsCpPIDRm.pid" \
+## sh FilesFoldersActions.cp.pid.rm.sh \
+##      "/var/run/FilesFoldersActions.cp.pid.rm.pid" \
 ##      "12345" "/var/log/bash/$file_name.log" \
 ##      "/tmp/bash/$file_name.log" \
 ##      "0" \
@@ -31,7 +31,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="FilesFoldersActionsCpPIDRm.sh"
+file_name_full="FilesFoldersActions.cp.pid.rm.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
@@ -204,22 +204,27 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "PID File: $PID_PATH_FULL"
 	echo "PID Process ID: $PID"
 
-        if [ $OUTPUT_SWITCH -eq '1' ]; then
-		echo "Output to sys log file $SYS_LOG"
-		echo "Output to job log file $JOB_LOG"
+	if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${SYS_LOG%/*} is missing"
+		echo "Creating it at ${SYS_LOG%/*}"
 	fi
 
-	if [ $sys_log_file_missing_switch -eq '1' ]; then
+	if [ "$sys_log_file_missing_switch" -eq '1' ]; then
 		echo "Sys log file: $SYS_LOG is missing"
 		echo "Creating it at $SYS_LOG"
 	fi
 
-	if [ $job_log_file_missing_switch -eq '1' ]; then
+	if [ "$job_log_file_missing_switch" -eq '1' ]; then
 		echo "Job log file: $JOB_LOG is missing"
 		echo "Creating it at $JOB_LOG"
 	fi
 
-	if [ $OUTPUT_SWITCH -eq '0' ]; then
+        if [ "$job_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${JOB_LOG%/*} is missing"
+		echo "Creating it at ${JOB_LOG%/*}"
+	fi
+
+	if [ "$OUTPUT_SWITCH" -eq '0' ]; then
         echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
 	else
 		echo "Output to sys log file $SYS_LOG"

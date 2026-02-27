@@ -1,4 +1,4 @@
- sh FilesFoldersActionsCpPIDRm.sh \
+ sh FilesFoldersActions.cp.pid.rm.sh \
     "/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp.pid" \
     "51822" \
 	"/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_sys.log" \

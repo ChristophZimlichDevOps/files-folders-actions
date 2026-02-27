@@ -1,4 +1,4 @@
-### THIS A CONFIG FILE FOR FilesFoldersCp.sh
+### THIS A CONFIG FILE FOR FilesFoldersActions.cp.sh
 ## MODIFY IT BEHIND THE = ....NOTHING ELSE
 ## DON'T RENAME IT
 
@@ -28,8 +28,8 @@ FOLDER_DEEP=1
 SCRIPT_PATH="$HOME/bin/linux/shell/FilesFoldersActions.loc/"
 SCRIPT_SUB_FILE_PID_CREATE="FilesFoldersCpPIDCreate.sh"
 SCRIPT_SUB_FILE_PID_RM="FilesFoldersCpPIDRm.sh"
-SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_sys.log"
-JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp_job.log"
+SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp_sys.log"
+JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

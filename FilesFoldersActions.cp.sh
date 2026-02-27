@@ -4,7 +4,7 @@
 ##
 ##
 ## Summary
-## This script will copy files like you want. Useful for backups for example.
+## This script will copy files and folders like you want. Useful for backups for example.
 ##
 ## Parameter  1: PID full path i.e. "/var/run/$file_name.pid"
 ## Parameter  2: Folder Source i.e. "/home/backup/mysql/"
@@ -14,8 +14,8 @@
 ##                                  1=Copy files and folders
 ##                                  2=Copy only folders
 ## Parameter  6: Script path i.e.   "/root/bin/linux/shell/FilesFoldersActions/"
-## Parameter  7: Sub Script for creating PID i.e. "FilesFoldersActionsCpPIDCreate.sh"
-## Parameter  8: Sub Script for removing PID i.e. "FilesFoldersActionsCpPIDRm.sh"
+## Parameter  7: Sub Script for creating PID i.e. "FilesFoldersActions.cpPIDCreate.sh"
+## Parameter  8: Sub Script for removing PID i.e. "FilesFoldersActions.cpPIDRm.sh"
 ## Parameter  9: Sys log i.e.		"/var/log/bash/$file_name.log"
 ## Parameter 10: Job log i.e.		"/tmp/bash/$file_name.log"
 ## Parameter 11: Output Switch      0=Console
@@ -24,7 +24,7 @@
 ##                                  1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersActionsCp.sh \
+## sh FilesFoldersActions.cp.sh \
 ##		"/var/run/$file_name.pid" \
 ##		"/home/backup/mysql/" \
 ##		"/tmp/bash/" \
@@ -32,10 +32,10 @@
 ##		"1" \
 ##		"1" \
 ##		"$HOME/bin/linux/shell/FilesFoldersActions/" \
-##		"FilesFoldersActionsCpPIDCreate.sh" \
-##		"FilesFoldersActionsCpPIDRm.sh" \
-##		"/var/log/$file_name.log" \
-##		"/tmp/$file_name.log" \
+##		"FilesFoldersActions.cpPIDCreate.sh" \
+##		"FilesFoldersActions.cpPIDRm.sh" \
+##		"/var/log/bash/$file_name.log" \
+##      "/tmp/bash/$file_name.log" \
 ##		"0" \
 ##		"1"
 
@@ -47,7 +47,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="FilesFoldersActionsCp.sh"
+file_name_full="FilesFoldersActions.cp.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
@@ -314,17 +314,27 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "OFF"
 	fi
 
-	if [ $job_log_file_missing_switch -eq '1' ]; then
-		echo "Job log file: $JOB_LOG is missing"
-		echo "Creating it at $JOB_LOG"
+	if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${SYS_LOG%/*} is missing"
+		echo "Creating it at ${SYS_LOG%/*}"
 	fi
 
-	if [ $sys_log_file_missing_switch -eq '1' ]; then
+	if [ "$sys_log_file_missing_switch" -eq '1' ]; then
 		echo "Sys log file: $SYS_LOG is missing"
 		echo "Creating it at $SYS_LOG"
 	fi
 
-	if [ $OUTPUT_SWITCH -eq '0' ]; then
+	if [ "$job_log_file_missing_switch" -eq '1' ]; then
+		echo "Job log file: $JOB_LOG is missing"
+		echo "Creating it at $JOB_LOG"
+	fi
+
+        if [ "$job_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${JOB_LOG%/*} is missing"
+		echo "Creating it at ${JOB_LOG%/*}"
+	fi
+
+	if [ "$OUTPUT_SWITCH" -eq '0' ]; then
         echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
 	else
 		echo "Output to sys log file $SYS_LOG"

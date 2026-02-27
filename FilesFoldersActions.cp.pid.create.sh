@@ -4,7 +4,7 @@
 ##
 ##
 ## Summary
-## This script will check the source and folders for copying to prevent cross copying. Useful for backups for example.
+## This script will check the source and target folders for copying to prevent cross copying. Useful for backups for example.
 ##
 ## Parameter  1: PID Full Path i.e.     "/var/run/test.pid"
 ## Parameter  2: PID i.e.               "54895"
@@ -18,13 +18,13 @@
 ##                                      1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersActionsCpPIDCreate.sh \
-##      "/var/run/FilesFoldersActionsCpPIDCreate.pid" \
+## sh FilesFoldersActions.cp.pid.create.sh \
+##      "/var/run/FilesFoldersActions.cp.pid.create.pid" \
 ##      "51822" \
 ##      "/home/.backup/mysql/" \
 ##      "/tmp/" \
-##      "0" \
-##      "0" \
+##      "/var/log/$file_name.log" \
+##	"/tmp/$file_name.log" \
 ##      "0" \
 ##      "1"
 
@@ -37,7 +37,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="FilesFoldersActionsCpPIDCreate.sh"
+file_name_full="FilesFoldersActions.cp.pid.create.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
@@ -85,7 +85,7 @@ JOB_LOG=$6
 OUTPUT_SWITCH=$7
 VERBOSE_SWITCH=$8
 
-## Set the job config FILE from parameter
+## Set the job config file from parameter
 config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
 echo "Using config file $config_file_in for $file_name_full"
 
@@ -262,22 +262,27 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
                 echo "Creating it at ${FOLDER_TARGET%/*}"
         fi
 
-        if [ $OUTPUT_SWITCH -eq '1' ]; then
-		echo "Output to sys log file $SYS_LOG"
-		echo "Output to job log file $JOB_LOG"
+        if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${SYS_LOG%/*} is missing"
+		echo "Creating it at ${SYS_LOG%/*}"
 	fi
 
-	if [ $sys_log_file_missing_switch -eq '1' ]; then
+	if [ "$sys_log_file_missing_switch" -eq '1' ]; then
 		echo "Sys log file: $SYS_LOG is missing"
 		echo "Creating it at $SYS_LOG"
 	fi
 
-	if [ $job_log_file_missing_switch -eq '1' ]; then
+	if [ "$job_log_file_missing_switch" -eq '1' ]; then
 		echo "Job log file: $JOB_LOG is missing"
 		echo "Creating it at $JOB_LOG"
 	fi
 
-	if [ $OUTPUT_SWITCH -eq '0' ]; then
+        if [ "$job_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${JOB_LOG%/*} is missing"
+		echo "Creating it at ${JOB_LOG%/*}"
+	fi
+
+	if [ "$OUTPUT_SWITCH" -eq '0' ]; then
         echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
 	else
 		echo "Output to sys log file $SYS_LOG"

@@ -1,10 +1,10 @@
-### THIS A CONFIG FILE FOR FilesFoldersActionsRm.sh
+### THIS A CONFIG FILE FOR FilesFoldersActions.rm.sh
 ## MODIFY IT BEHIND THE = ....NOTHING ELSE
 ## DON'T RENAME IT
 
 ## Parameter 1: Folder Target i.e. "/home/backup/mysql/"
 ## Parameter 2: Name Part i.e. 		"current*"
-## Parameter 4: Remove Mode Switch	0=Only files
+## Parameter 3: Remove Mode Switch	0=Only files
 ##                             		1=Files and Folders
 ##                             		2=Only Folders
 ## Parameter 4: Remove Files Folders Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to remove. MAX VALUE IS 2 for security reason
@@ -20,8 +20,8 @@ FOLDER_TARGET="/home/.backup/mysql/sub/"
 NAME_PART="current*" 
 MODE_SWITCH=1
 FOLDER_DEEP=1
-SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsRm_sys.log"
-JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsRm_job.log"
+SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.rm_sys.log"
+JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.rm_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1
 

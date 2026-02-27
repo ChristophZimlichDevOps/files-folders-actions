@@ -1,4 +1,4 @@
-### THIS A CONFIG FILE FOR FilesFoldersActionsRename.sh
+### THIS A CONFIG FILE FOR FilesFoldersActions.rename.sh
 ## MODIFY IT BEHIND THE = ....NOTHING ELSE
 ## DON'T RENAME IT
 
@@ -13,11 +13,9 @@
 ##                                     	1=On
 ## Parameter  7: Sys log i.e. 			"/var/log/bash/$file_name.log"
 ## Parameter  8: Job log i.e. 			"/tmp/bash/$file_name.log"
-## Parameter  9: Sys log i.e.		    "/var/log/bash/$file_name.log"
-## Parameter 10: Job log i.e.		    "/tmp/bash/$file_name.log"
-## Parameter 11: Output Switch      	0=Console
+## Parameter  9: Output Switch      	0=Console
 ##                                  	1=Logfile; Default
-## Parameter 12: Verbose Switch     	0=Off
+## Parameter 10: Verbose Switch     	0=Off
 ##                                  	1=On; Default
 
 NAME_PART_OLD="current*" 
@@ -26,9 +24,7 @@ FOLDER_TARGET="/home/.backup/mysql/sub/"
 MODE_SWITCH=1
 FOLDER_DEEP=1
 RECREATE_FOLDER_SWITCH=1
-SCRIPT_PATH="$HOME/bin/linux/shell/FilesFoldersActions.loc/"
-SCRIPT_SUB_FILE_FOLDERS_MV="folders-mv.sh"
-SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsRename_sys.log"
-JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActionsRename_job.log"
+SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.rename_sys.log"
+JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.rename_job.log"
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1

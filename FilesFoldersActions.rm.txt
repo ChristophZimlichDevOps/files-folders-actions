@@ -1,0 +1,9 @@
+ sh FilesFoldersActions.rm.sh \
+    "/home/.backup/mysql" \
+    "$(date +%y%m%d*)" \
+    "0" \
+    "1" \
+    "/var/log/bash/$file_name.log" \
+    "/tmp/bash/$file_name.log" \
+    "0" \
+    "1"

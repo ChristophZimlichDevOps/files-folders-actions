@@ -4,7 +4,7 @@
 ##
 ##
 ## Summary
-## This script will rename, copy and remove files like you want. Useful for backups for example.
+## This script will rename, copy and remove files and folders like you want. Useful for backups for example.
 ##
 ## Parameter  1: Folder Source i.e.    "/home/backup/mysql/"
 ## Parameter  2: Folder Target i.e.    "/tmp/"
@@ -16,9 +16,9 @@
 ## Parameter  9: Mode Switch   0=Only files
 ##                             1=CFiles and Folders
 ##                             2=Only Folders
-## Parameter 10: Sub Script for copying i.e. "folders-folders-cp.sh"
-## Parameter 11: Sub Script for renaming i.e. "folders-folders-rename.sh"
-## Parameter 12: Sub Script for removing i.e. "folders-folders-remove.sh"
+## Parameter 10: Sub Script for copying i.e. "FilesFoldersActions.cp.sh"
+## Parameter 11: Sub Script for renaming i.e. "FilesFoldersActions.rename.sh"
+## Parameter 12: Sub Script for removing i.e. "FilesFoldersActions.remove.sh"
 ## Parameter 13: Recreate Folder Switch 0=Off
 ##                                      1=On
 ## Parameter 14: Script Path...Where the scripts are stored i.e. "$HOME/bin/"
@@ -30,7 +30,22 @@
 ##                                  1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersActionsAIO.sh "/backup/internal/mysql/" "/backup/external/mysql/" "current*" "$(date +%y%m%d%H%M%S)" "$(date +%y%m%d%H*)" "1" "1" "folders-folders-cp.sh" "folders-folders-rename.sh" "folders-folders-rm.sh" "1" "$HOME/bin/linux/shell/FilesFoldersActions/" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1" 
+## sh FilesFoldersActions.main.sh \
+##      "/backup/internal/mysql/" \
+##      "/backup/external/mysql/" \
+##      "current*" "$(date +%y%m%d%H%M%S)" \
+##      "$(date +%y%m%d%H*)" \
+##      "1" \
+##      "1" \
+##      "FilesFoldersActions.cp.sh" \
+##      "FilesFoldersActions.rename.sh" \
+##      "FilesFoldersActions.rm.sh" \
+##      "1" \
+##      "$HOME/bin/linux/shell/FilesFoldersActions/" \
+##      "/var/log/bash/$file_name.log" \
+##      "/tmp/bash/$file_name.log" \
+##      "0" \
+##      "1" 
 
 ## Clear console to debug that stuff better
 #clear
@@ -40,7 +55,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="FilesFoldersActionsAIO.sh"
+file_name_full="FilesFoldersActions.main.sh"
 file_name="${file_name_full##*/}"
 
 run_as_user_name=$(whoami)
@@ -204,7 +219,7 @@ fi
 ## Remove PID entry from PID file or the hole PID file when job is finished
 echo "When job is done clean from PID $PID_PATH_FULL PID Process ID $$ entry"
 # shellcheck disable=SC2154
-echo ". ${SCRIPT_PATH}files-folders-cp-pid-rm.sh" $PID_PATH_FULL $$ $OUTPUT $VERBOSE"
+echo ". ${SCRIPT_PATH}files-folders-cp-pid-rm.sh $PID_PATH_FULL $$ $OUTPUT $VERBOSE"
 trap '. -- ${SCRIPT_PATH}files-folders-cp-pid-rm.sh" '"$PID_PATH_FULL"' '$$' '"$OUTPUT"' '"$VERBOSE"' ' EXIT
 
 ## Check last task for error(s)
@@ -272,18 +287,28 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
                 echo "OFF"
         fi
 
-        if [ $job_log_file_missing_switch -eq '1' ]; then
-                echo "Job log file: $JOB_LOG is missing"
-                echo "Creating it at $JOB_LOG"
-        fi
+        if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${SYS_LOG%/*} is missing"
+		echo "Creating it at ${SYS_LOG%/*}"
+	fi
 
-        if [ $sys_log_file_missing_switch -eq '1' ]; then
-                echo "Sys log file: $SYS_LOG is missing"
-                echo "Creating it at $SYS_LOG"
-        fi
+	if [ "$sys_log_file_missing_switch" -eq '1' ]; then
+		echo "Sys log file: $SYS_LOG is missing"
+		echo "Creating it at $SYS_LOG"
+	fi
 
-        if [ $OUTPUT_SWITCH -eq '0' ]; then
-                echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
+	if [ "$job_log_file_missing_switch" -eq '1' ]; then
+		echo "Job log file: $JOB_LOG is missing"
+		echo "Creating it at $JOB_LOG"
+	fi
+
+        if [ "$job_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${JOB_LOG%/*} is missing"
+		echo "Creating it at ${JOB_LOG%/*}"
+	fi
+
+	if [ "$OUTPUT_SWITCH" -eq '0' ]; then
+        echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
 	else
 		echo "Output to sys log file $SYS_LOG"
 		echo "Output to job log file $JOB_LOG"

@@ -1,4 +1,4 @@
- sh FilesFoldersActionsCpPIDCreate.sh \
+ sh FilesFoldersActions.cp.pid.create.sh \
     "/tmp/bash/FilesFoldersActions/FilesFoldersActionsCp.pid" \
     "51822" \
     "/home/.backup/mysql/" \

@@ -25,7 +25,17 @@
 ##                                  	1=On; Default
 ##
 ## Call it like this:
-## sh FilesFoldersActionsRename.sh "current*" "$(date +%y%m%d%H%M%S)" "/home/backup/mysql/" "0" "1" "0" "/var/log/bash/$file_name.log" "/tmp/bash/$file_name.log" "0" "1"
+## sh FilesFoldersActions.rename.sh \
+##		"current*" \
+##		"$(date +%y%m%d%H%M%S)" \
+##		"/home/backup/mysql/" \
+##		"0" \
+##		"1" \
+##		"0" \
+##		"/var/log/bash/$file_name.log" \
+##		"/tmp/bash/$file_name.log" \
+##		"0" \
+##		"1"
 
 ## Clear console to debug that stuff better
 #clear
@@ -35,7 +45,7 @@
 
 ## Set Stuff
 version="0.0.1-alpha.1"
-file_name_full="FilesFoldersActionsRename.sh"
+file_name_full="FilesFoldersActions.rename.sh"
 file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
@@ -57,7 +67,6 @@ declare -i MODE_SWITCH
 declare -i FOLDER_DEEP
 declare -i RECREATE_FOLDER_SWITCH
 declare	   SCRIPT_PATH
-declare	   SCRIPT_SUB_FILE_FOLDERS_MV
 declare	   SYS_LOG
 declare	   JOB_LOG
 declare -i OUTPUT_SWITCH
@@ -79,13 +88,11 @@ NAME_PART_NEW=$2
 FOLDER_TARGET=$3
 MODE_SWITCH=$4
 FOLDER_DEEP=$5
-RECREATE_FOLDER_SWITCH=$5
-SCRIPT_PATH=$6
-SCRIPT_SUB_FILE_FOLDERS_MV=$7
-SYS_LOG=$8
-JOB_LOG=$9
-OUTPUT_SWITCH=${10}
-VERBOSE_SWITCH=${11}
+RECREATE_FOLDER_SWITCH=$6
+SYS_LOG=$7
+JOB_LOG=$8
+OUTPUT_SWITCH=$9
+VERBOSE_SWITCH=${10}
 
 ## Set the job config FILE from parameter
 config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
@@ -235,22 +242,27 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 		echo "OFF"
 	fi
 
-	if [ $OUTPUT_SWITCH -eq '1' ]; then
-		echo "Output to sys log file $SYS_LOG"
-		echo "Output to job log file $JOB_LOG"
+	if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${SYS_LOG%/*} is missing"
+		echo "Creating it at ${SYS_LOG%/*}"
 	fi
 
-	if [ $sys_log_file_missing_switch -eq '1' ]; then
+	if [ "$sys_log_file_missing_switch" -eq '1' ]; then
 		echo "Sys log file: $SYS_LOG is missing"
 		echo "Creating it at $SYS_LOG"
 	fi
 
-	if [ $job_log_file_missing_switch -eq '1' ]; then
+	if [ "$job_log_file_missing_switch" -eq '1' ]; then
 		echo "Job log file: $JOB_LOG is missing"
 		echo "Creating it at $JOB_LOG"
 	fi
 
-	if [ $OUTPUT_SWITCH -eq '0' ]; then
+        if [ "$job_log_folder_missing_switch" -eq '1' ]; then
+		echo "Sys log folder: ${JOB_LOG%/*} is missing"
+		echo "Creating it at ${JOB_LOG%/*}"
+	fi
+
+	if [ "$OUTPUT_SWITCH" -eq '0' ]; then
         echo "Output to console...As $run_as_user_name:$run_as_group_name can see ;)"
 	else
 		echo "Output to sys log file $SYS_LOG"
