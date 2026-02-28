@@ -67,13 +67,12 @@ if [ "$run_as_user_uid" != "0" ]; then
 fi
 
 ## Clear used stuff
+declare    PID_PATH_FULL
 declare	   FOLDER_SOURCE
 declare	   FOLDER_TARGET
 declare	   NAME_PART
 declare -i MODE_SWITCH
 declare -i FOLDER_DEEP
-declare    PID_PATH_FULL
-declare -i PID
 declare	   SCRIPT_PATH
 declare	   SCRIPT_SUB_FILE_PID_CREATE
 declare	   SCRIPT_SUB_FILE_PID_RM
@@ -206,7 +205,7 @@ if [ "$OUTPUT_SWITCH" -eq '1' ] && \
    [ "$VERBOSE_SWITCH" -eq '0' ]; then
         sh OutputStyler "start"
         sh OutputStyler "start"
-        echo ">>> Sub Module $file_name_full v$version starting >>>"
+        echo ">>> Sub Module $file_name_full v$version sf(s) etarting >>>"
         echo ">>> PID Create Config: PID Path=$PID_PATH_FULL, PID=$PID, Folder Source=$FOLDER_SOURCE, Folder Target=$FOLDER_TARGET >>>"
 fi
 
@@ -222,6 +221,14 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Run as group gid: $run_as_group_gid"
 	echo "Run on host: $run_on_hostname"
 	echo "Verbose is ON"
+	echo "PID file full path: $PID_PATH_FULL"
+	echo "Folder Source: $FOLDER_SOURCE"
+	echo "Folder Target: $FOLDER_TARGET"
+	echo "Name part to copy: $NAME_PART"
+	echo "Folder Deep: $FOLDER_DEEP"
+	echo "Script path: $SCRIPT_PATH"
+	echo "Name of the PID create script: $SCRIPT_SUB_FILE_PID_CREATE"
+	echo "Name of the PID remove script: $SCRIPT_SUB_FILE_PID_RM"
 
 	echo -n "Copying File(s) is "
 	if [ $MODE_SWITCH -eq '2' ]; then
@@ -235,6 +242,13 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "ON"
 	else
 		echo "OFF"
+	fi
+
+	echo -n "Config Mode is on "
+	if [ $CONFIG_SWITCH -eq '0' ]; then
+		echo "Parameters"
+	else
+		echo "Config file"
 	fi
 
 	if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
@@ -392,95 +406,27 @@ else
 
 fi
 
-## Remove PID from PID file when job is finished
-echo "When job is done clean from PID $PID_PATH_FULL PID Process ID $$ entry"
-string_tmp="$SCRIPT_PATH$SCRIPT_SUB_FILE_PID_RM"
-echo "string_tmp $string_tmp"
-#echo ". $string_tmp \
-#	$PID_PATH_FULL \
-#	$$ \
-#	$CONFIG_SWITCH \
-#	$OUTPUT_SWITCH \
-#	$VERBOSE_SWITCH" \
-#	> "$string_tmp"
-#trap '. -- $string_tmp " \
-#	'"$PID_PATH_FULL"' \
-#	'$$' \
-#	'"$CONFIG_SWITCH"' \
-#	'"$OUTPUT_SWITCH"' \
-#	'"$VERBOSE_SWITCH"' ' EXIT
-
-sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_RM" \
-	"$PID_PATH_FULL" \
-	"$$" \
-	"$SYS_LOG" \
-	"$JOB_LOG" \
-	"$CONFIG_SWITCH" \
-	"$OUTPUT_SWITCH" \
-	"$VERBOSE_SWITCH"
-
-## Check last task for error(s)
-status=$?
-if [ $status != 0 ]; then
-	echo "Error with PID $PID_PATH_FULL and finding PID Process ID $PID_PROCESS_ID, code=$status";
-
-	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-		echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-	fi
-
-	exit $status
-else
-
-	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-		echo "Removing entry in PID $PID_PATH_FULL with PID Process ID $PID_PROCESS_ID finished"
-	fi
-
-fi
-
 ## Lets roll
 readarray -t files < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART")
 readarray -t folders < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART")
 
-if [ $VERBOSE_SWITCH -eq '1' ]; then
-	echo "Folder Path Source: $FOLDER_SOURCE"
-	echo "Folder Path Target: $FOLDER_TARGET"
-	echo "Copy $mode Name Part: $NAME_PART"
-
-	if [ $MODE_SWITCH -lt '2' ] && [ "${#files[@]}" -gt '0' ]; then
-		echo "This will effect the following ${#files[@]} file(s)..."
-		for file in "${!files[@]}"
-		do
-			echo "Array files element $file: ${files[$file]}"
-		done
-	fi
-
-	if [ $MODE_SWITCH -gt '0' ] && [ ${#folders[@]} -gt '0' ]; then
-		echo "This will effect the following ${#folders[@]} folder(s)..."
-		for folder in "${!folders[@]}"
-		do
-			echo "Array folders element $folder: ${folders[$folder]}"
-		done
-	fi
-	echo "Copying $mode from $FOLDER_SOURCE to $FOLDER_TARGET with name like $NAME_PART started"
-fi
-
 if [ $MODE_SWITCH -lt '2' ]; then
 	if [ ${#files[@]} -eq '0' ]; then
-		echo "No $mode to copy. EXIT"
-		exit 1
+		echo "No file(s) to copy."
+		#exit 1
 	fi
 
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "This will effect the following ${#files[@]} x file(s)..."
 		for file in "${!files[@]}"
 		do
-			echo "Array folder(s) element $file: ${files[$file]}"
+			echo "Array file(s) element $file: ${files[$file]}"
 		done
 		echo "Copying file(s) from $FOLDER_SOURCE to $FOLDER_TARGET with name like $NAME_PART started"
-		find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" \
+		find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
 			-exec cp -fv {} "$FOLDER_TARGET" ";"
 	else
-        find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" \
+        find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
 			-exec cp -f {} "$FOLDER_TARGET" ";"
 	fi
 
@@ -514,13 +460,60 @@ if [ $MODE_SWITCH -gt '0' ]; then
 			echo "Array folder(s) element $folder: ${folders[$folder]}"
 		done
 		echo "Copying folder(s) from $FOLDER_SOURCE to $FOLDER_TARGET with name like $NAME_PART started"
-		find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
+		find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
 			-exec cp -rfv {} "$FOLDER_TARGET" ";"
 	else
-        find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
+        find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
 			-exec cp -rf {} "$FOLDER_TARGET" ";"
 	fi
+
+	## Check last task for error(s)
+	status=$?
+	if [ $status != 0 ]; then
+		echo "Error with PID $PID_PATH_FULL and finding PID Process ID $PID_PROCESS_ID, code=$status";
+
+		if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+			echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+		fi
+
+		exit $status
+	else
+
+		if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+			echo "Removing entry in PID $PID_PATH_FULL with PID Process ID $PID_PROCESS_ID finished"
+		fi
+
+	fi
 fi
+
+## Remove PID from PID file when job is finished
+echo "When job is done clean from PID $PID_PATH_FULL PID Process ID $$ entry"
+string_tmp="$SCRIPT_PATH$SCRIPT_SUB_FILE_PID_RM"
+echo "string_tmp $string_tmp"
+#echo ". $string_tmp \
+#	$PID_PATH_FULL \
+#	$$ \
+#	$CONFIG_SWITCH \
+#	$OUTPUT_SWITCH \
+#	$VERBOSE_SWITCH" \
+#	> "$string_tmp"
+#trap '. -- $string_tmp " \
+#	'"$PID_PATH_FULL"' \
+#	'$$' \
+#	'"$CONFIG_SWITCH"' \
+#	'"$OUTPUT_SWITCH"' \
+#	'"$VERBOSE_SWITCH"' ' EXIT
+
+
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_RM" \
+	"$PID_PATH_FULL" \
+	"$$" \
+	"$SYS_LOG" \
+	"$JOB_LOG" \
+	"$CONFIG_SWITCH" \
+	"$OUTPUT_SWITCH" \
+	"$VERBOSE_SWITCH"
+
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	sh OutputStyler "middle"

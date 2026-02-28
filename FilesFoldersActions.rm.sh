@@ -12,11 +12,13 @@
 ##                             		1=Files and Folders
 ##                             		2=Only Folders
 ## Parameter 4: Remove Files Folders Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to remove. MAX VALUE IS 2 for security reason
-## Parameter 5: Sys log i.e. 		"/var/log/bash/$file_name.log"
-## Parameter 6: Job log i.e.		"/tmp/bash/$file_name.log"
-## Parameter 7: Output Switch      	0=Console
+## Parameter 5: Recreate Folder Switch	0=Off
+##                                     	1=On
+## Parameter 6: Sys log i.e. 		"/var/log/bash/$file_name.log"
+## Parameter 7: Job log i.e.		"/tmp/bash/$file_name.log"
+## Parameter 8: Output Switch      	0=Console
 ##                                 	1=Logfile; Default
-## Parameter 8: Verbose Switch     	0=Off
+## Parameter 9: Verbose Switch     	0=Off
 ##                                 	1=On; Default
 ##
 ## Call it like this:
@@ -24,6 +26,7 @@
 ##		"/home/.backup/mysql" \
 ##		"$(date +%y%m%d*)" \
 ##		"0" \
+##		"1" \
 ##		"1" \
 ##		"/var/log/bash/$file_name.log" \
 ##		"/tmp/bash/$file_name.log" \
@@ -71,6 +74,7 @@ declare    FOLDER_TARGET
 declare    NAME_PART
 declare	   MODE_SWITCH
 declare    FOLDER_DEEP
+declare -i FOLDER_RECREATE_SWITCH
 declare -i CONFIG_SWITCH
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
@@ -96,13 +100,14 @@ FOLDER_TARGET=$1
 NAME_PART=$2
 MODE_SWITCH=$3
 FOLDER_DEEP=$4
-SYS_LOG=$5
-JOB_LOG=$6
-CONFIG_SWITCH=$7
-OUTPUT_SWITCH=$8
-VERBOSE_SWITCH=$9
+FOLDER_RECREATE_SWITCH=$5
+SYS_LOG=$6
+JOB_LOG=$7
+CONFIG_SWITCH=$8
+OUTPUT_SWITCH=$9
+VERBOSE_SWITCH=${10}
 
-#if [ $CONFIG_SWITCH -eq '1' ]; then 
+if [ $CONFIG_SWITCH -eq '1' ]; then 
 	## Set the job config FILE from parameter
 	config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
 	echo "Using config file $config_file_in for $file_name_full"
@@ -112,7 +117,7 @@ VERBOSE_SWITCH=$9
 	# shellcheck source=$config_file_in disable=SC1091
 	. "$config_file_in"
 	set +o allexport
-#fi
+fi
 
 # Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
@@ -241,6 +246,20 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	fi
 
 	echo "Removing $mode Folder(s) Deep $FOLDER_DEEP"
+
+	echo -n "Recreating Folder(s) is "
+	if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then 
+		echo "ON"
+	else
+		echo "OFF"
+	fi
+
+	echo -n "Config Mode is on "
+	if [ $CONFIG_SWITCH -eq '0' ]; then
+		echo "Parameters"
+	else
+		echo "Config file"
+	fi
 	
 	if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
 		echo "Sys log folder: ${SYS_LOG%/*} is missing"
@@ -296,6 +315,12 @@ if [ "$FOLDER_DEEP" = "" ] || \
    [ "$FOLDER_DEEP" -eq '0' ]; then
 		echo "Remove Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1"
 		FOLDER_DEEP=1
+fi
+
+if [ "$FOLDER_RECREATE_SWITCH" -gt '1' ] || \
+   [[ $FOLDER_RECREATE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Config Switch parameter $FOLDER_RECREATE_SWITCH is not a valid. EXIT"
+        exit 2
 fi
 
 if [ "$CONFIG_SWITCH" -gt '1' ] || \
@@ -461,35 +486,85 @@ if [ "$MODE_SWITCH" -gt '0' ]; then
 		echo "Starting removing folder(s) now..."
 
 		if [ $operation_mode_switch -eq '0' ]; then
-			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-				-exec rmdir --ignore-fail-on-non-empty -v {} ";"
+			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
+					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";"
+
+			else
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
+					-exec rmdir -v --ignore-fail-on-non-empty {} ";"
+			fi
 		fi
 
 		if [ $operation_mode_switch -eq '1' ]; then
-			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
-				-exec rmdir --ignore-fail-on-non-empty -v {} ";"
+			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
+					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";"
+
+			else
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
+					-exec rmdir -v --ignore-fail-on-non-empty {} ";"
+			fi
 		fi
 
 		if [ $operation_mode_switch -eq '2' ]; then
-			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
-				-exec rmdir --ignore-fail-on-non-empty -v {} ";"
+			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
+					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";"
+
+			else
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
+					-exec rmdir -v --ignore-fail-on-non-empty {} ";"
+
+			fi
 		fi
 
 	else
 
 		if [ $operation_mode_switch -eq '0' ]; then
-			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-				-exec rmdir --ignore-fail-on-non-empty {} ";"
+			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
+					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";"
+
+			else
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
+					-exec rmdir --ignore-fail-on-non-empty {} ";"
+
+			fi
 		fi
 
 		if [ $operation_mode_switch -eq '1' ]; then
-			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
-				-exec rmdir --ignore-fail-on-non-empty {} ";"
+			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
+					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";"
+
+			else
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
+					-exec rmdir --ignore-fail-on-non-empty {} ";"
+			fi
 		fi
 
 		if [ $operation_mode_switch -eq '2' ]; then
-			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
-				-exec rmdir --ignore-fail-on-non-empty {} ";"
+			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
+					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";"
+
+			else
+
+				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
+					-exec rmdir --ignore-fail-on-non-empty {} ";"
+
+			fi
 		fi	
 	fi
 fi

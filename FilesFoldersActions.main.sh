@@ -10,7 +10,7 @@
 ## Parameter  2: Folder Target i.e.    "/tmp/"
 ## Parameter  3: Name Part Old i.e.    "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
 ## Parameter  4: Name Part New i.e.    "$(date +%y%m%d%H%M%S)"
-## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d -d'1 year ago')*"
+## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d%*)"
 ## Parameter  6: Script Path...Where the scripts are stored i.e. "/root/bin/"
 ## Parameter  8: Folder Deep "1" Set the folder deep where File(s) and Folder(s) get found
 ## Parameter  9: Mode Switch   0=Only files
@@ -18,16 +18,18 @@
 ##                             2=Only Folders
 ## Parameter 10: Sub Script for copying i.e. "FilesFoldersActions.cp.sh"
 ## Parameter 11: Sub Script for renaming i.e. "FilesFoldersActions.rename.sh"
-## Parameter 12: Sub Script for removing i.e. "FilesFoldersActions.remove.sh"
-## Parameter 13: Recreate Folder Switch 0=Off
-##                                      1=On
-## Parameter 14: Script Path...Where the scripts are stored i.e. "$HOME/bin/"
-## Parameter 15: Sys log i.e. "/var/log/bash/$file_name.log"
-## Parameter 16: Job log i.e. "/tmp/bash/$file_name.log"
-## Parameter 17: Output Switch      0=Console
+## Parameter 12: Sub Script for removing i.e. "FilesFoldersActions.rm.sh"
+## Parameter 13: Recreate Folder Rename Switch  0=Off
+##                                              1=On
+## Parameter 14: Recreate Folder Remove Switch  0=Off
+##                                              1=On
+## Parameter 15: Script Path...Where the scripts are stored i.e. "$HOME/bin/"
+## Parameter 16: Sys log i.e. "/var/log/bash/$file_name.log"
+## Parameter 17: Job log i.e. "/tmp/bash/$file_name.log"
+## Parameter 18: Output Switch      0=Console
 ##                                  1=Logfile; Default
-## Parameter 18: Verbose Switch     0=Off
-##                                  1=On; Default
+## Parameter 19: Verbose Switch     0=Off
+##
 ##
 ## Call it like this:
 ## sh FilesFoldersActions.main.sh \
@@ -41,6 +43,7 @@
 ##      "FilesFoldersActions.cp.sh" \
 ##      "FilesFoldersActions.rename.sh" \
 ##      "FilesFoldersActions.rm.sh" \
+##      "1" \
 ##      "1" \
 ##      "$HOME/bin/linux/shell/FilesFoldersActions/" \
 ##      "/tmp/bash/FilesFoldersActions/${file_name}_sys.log" \
@@ -84,10 +87,12 @@ declare -i MODE_SWITCH
 declare    SCRIPT_SUB_FILE_CP
 declare    SCRIPT_SUB_FILE_RENAME
 declare    SCRIPT_SUB_FILE_RM
-declare -i RECREATE_FOLDER_SWITCH
+declare -i FOLDER_RECREATE_RENAME_SWITCH
+declare -i FOLDER_RECREATE_RM_SWITCH
 declare    SCRIPT_PATH
 declare    SYS_LOG
 declare    JOB_LOG
+declare -i CONFIG_SWITCH
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Needed for processing
@@ -110,7 +115,8 @@ MODE_SWITCH=$8
 SCRIPT_SUB_FILE_CP=$9
 SCRIPT_SUB_FILE_RENAME=${10}
 SCRIPT_SUB_FILE_RM=${11}
-RECREATE_FOLDER_SWITCH=${12}
+FOLDER_RECREATE_RENAME_SWITCH=${12}
+FOLDER_RECREATE_RM_SWITCH=${12}
 SCRIPT_PATH=${13}
 SYS_LOG=${14}
 JOB_LOG=${15}
@@ -118,15 +124,18 @@ CONFIG_SWITCH=${16}
 OUTPUT_SWITCH=${17}
 VERBOSE_SWITCH=${18}
 
-## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
+#if [ "$2" = "" ]; then
+        ## Set the job config FILE from parameter
+        #config_file_in=$1
+        config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
+        echo "Using config file $config_file_in for $file_name_full"
 
-## Import stuff from config FILE
-set -o allexport
-# shellcheck source=$config_file_in disable=SC1091
-. "$config_file_in"
-set +o allexport
+        ## Import stuff from config FILE
+        set -o allexport
+        # shellcheck source=$config_file_in disable=SC1091
+        . "$config_file_in"
+        set +o allexport
+#fi
 
 # Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
@@ -249,8 +258,15 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
                 echo "OFF"
         fi
 
+        echo -n "Recreating Folder(s) after renaming is "
+        if [ $FOLDER_RECREATE_RENAME_SWITCH -eq '1' ]; then
+                echo "ON"
+        else
+                echo "OFF"
+        fi
+
         echo -n "Recreating Folder(s) after removing is "
-        if [ $RECREATE_FOLDER_SWITCH -eq '1' ]; then
+        if [ $FOLDER_RECREATE_RM_SWITCH -eq '1' ]; then
                 echo "ON"
         else
                 echo "OFF"
@@ -361,9 +377,9 @@ if [ "$SCRIPT_SUB_FILE_RM" = "" ]; then
         exit 2
 fi
 
-if [ "$RECREATE_FOLDER_SWITCH" -gt '1' ] || \
-   [[ $RECREATE_FOLDER_SWITCH =~ [^[:digit:]] ]]; then
-        echo "Recreate Folder Switch parameter $RECREATE_FOLDER_SWITCH is not a valid. EXIT"
+if [ "$FOLDER_RECREATE_RENAME_SWITCH" -gt '1' ] || \
+   [[ $FOLDER_RECREATE_RENAME_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Recreate Folder Switch parameter $FOLDER_RECREATE_RENAME_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
@@ -402,7 +418,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_CP" \
         "$PID_PATH_FULL" \
         "$FOLDER_SOURCE" \
         "$FOLDER_TARGET" \
-        "$NAME_PART_NEW" \
+        "$NAME_PART_OLD" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
         "$SCRIPT_PATH" \
@@ -422,7 +438,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_RENAME" \
         "$FOLDER_SOURCE" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
-        "$RECREATE_FOLDER_SWITCH" \
+        "$FOLDER_RECREATE_RENAME_SWITCH" \
         "$SYS_LOG" \
         "$JOB_LOG" \
         "$CONFIG_SWITCH" \
@@ -437,7 +453,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_RENAME" \
         "$FOLDER_TARGET" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
-        "$RECREATE_FOLDER_SWITCH" \
+        "$FOLDER_RECREATE_RENAME_SWITCH" \
         "$SYS_LOG" \
         "$JOB_LOG" \
         "$CONFIG_SWITCH" \
@@ -451,6 +467,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_RM" \
         "$NAME_PART_DELETE" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
+        "$FOLDER_RECREATE_RM_SWITCH" \
         "$SYS_LOG" \
         "$JOB_LOG" \
         "$CONFIG_SWITCH" \
@@ -464,6 +481,7 @@ sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_RM" \
         "$NAME_PART_DELETE" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
+        "$FOLDER_RECREATE_RM_SWITCH" \
         "$SYS_LOG" \
         "$JOB_LOG" \
         "$CONFIG_SWITCH" \

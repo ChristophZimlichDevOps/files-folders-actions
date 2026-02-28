@@ -3,6 +3,7 @@
     "$(date +%y%m%d*)" \
     "0" \
     "1" \
+    "1" \
    "/tmp/bash/FilesFoldersActions/${file_name}_sys.log" \
    "/tmp/bash/FilesFoldersActions/${file_name}_job.log" \
     "0" \

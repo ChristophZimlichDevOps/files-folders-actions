@@ -66,7 +66,7 @@ declare	   NAME_PART_NEW
 declare	   FOLDER_TARGET
 declare -i MODE_SWITCH
 declare -i FOLDER_DEEP
-declare -i RECREATE_FOLDER_SWITCH
+declare -i FOLDER_RECREATE_SWITCH
 declare	   SYS_LOG
 declare	   JOB_LOG
 declare -i CONFIG_SWITCH
@@ -90,14 +90,14 @@ NAME_PART_NEW=$2
 FOLDER_TARGET=$3
 MODE_SWITCH=$4
 FOLDER_DEEP=$5
-RECREATE_FOLDER_SWITCH=$6
+FOLDER_RECREATE_SWITCH=$6
 SYS_LOG=$7
 JOB_LOG=$8
 CONFIG_SWITCH=$9
 OUTPUT_SWITCH=${10}
 VERBOSE_SWITCH=${11}
 
-#if [ $CONFIG_SWITCH -eq '1' ]; then 
+if [ $CONFIG_SWITCH -eq '1' ]; then 
 	## Set the job config FILE from parameter
 	config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
 	echo "Using config file $config_file_in for $file_name_full"
@@ -107,7 +107,7 @@ VERBOSE_SWITCH=${11}
 	# shellcheck source=$config_file_in disable=SC1091
 	. "$config_file_in"
 	set +o allexport
-#fi
+fi
 
 # Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
@@ -197,14 +197,6 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo ">>> Rename Config: Name Part Old=$NAME_PART_OLD, Name Part New=$NAME_PART_NEW, Folder Source=$FOLDER_TARGET, Mode=$mode >>>"
 fi
 
-## Set parameters if not set correctly by config FILE
-if [ "$FOLDER_DEEP" = "" ] || \
-   [ "$FOLDER_DEEP" -gt '2' ] || \
-   [ "$FOLDER_DEEP" -eq '0' ]; then
-		echo "Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1"
-		FOLDER_DEEP=1
-fi
-
 ## Print file name
 if [ "$OUTPUT_SWITCH" -eq '1' ] && \
    [ "$VERBOSE_SWITCH" -eq '0' ]; then
@@ -229,7 +221,7 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 	echo "$mode Name Part Old: $NAME_PART_OLD"
 	echo "$mode Name Part New: $NAME_PART_NEW"
 	echo "Folder Source: $FOLDER_TARGET"
-    echo "Search for file(s) like: $FOLDER_TARGET$NAME_PART_OLD"
+    echo "Search for $mode like: $FOLDER_TARGET$NAME_PART_OLD"
 	
 	echo -n "Renaming file(s) is "
 	if [ "$MODE_SWITCH" -gt '1' ]; then
@@ -246,11 +238,19 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 	fi
 
 	echo "Renaming Folder(s) Deep $FOLDER_DEEP"
+	
 	echo -n "Recreating Folder(s) is "
-	if [ "$RECREATE_FOLDER_SWITCH" -eq '1' ]; then 
+	if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then 
 		echo "ON"
 	else
 		echo "OFF"
+	fi
+
+	echo -n "Config Mode is on "
+	if [ $CONFIG_SWITCH -eq '0' ]; then
+		echo "Parameters"
+	else
+		echo "Config file"
 	fi
 
 	if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
@@ -280,7 +280,6 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 		echo "Output to job log file $JOB_LOG"
 	fi
 
-    
 	echo "!!! ATTENTION !!!         	Parameter 1: Name Part Old i.e. current* 	    	                               !!! ATTENTION !!!"
 	echo "!!! ATTENTION !!!         	ONLY wildcards at the beginning and at the end with other real content will work   !!! ATTENTION !!!"
 	echo "!!! ATTENTION !!!         	ONLY wildcards with no other real content will NOT work                            !!! ATTENTION !!!"
@@ -309,6 +308,19 @@ fi
 if [ "$MODE_SWITCH" -gt '2' ] || \
    [[ $MODE_SWITCH =~ [^[:digit:]] ]]; then
         echo "Config Switch parameter $MODE_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$FOLDER_DEEP" = "" ] || \
+   [ "$FOLDER_DEEP" -gt '2' ] || \
+   [ "$FOLDER_DEEP" -eq '0' ]; then
+		echo "Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1"
+		FOLDER_DEEP=1
+fi
+
+if [ "$FOLDER_RECREATE_SWITCH" -gt '1' ] || \
+   [[ $FOLDER_RECREATE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Folder recreate Switch parameter $FOLDER_RECREATE_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
@@ -361,16 +373,16 @@ if [ $MODE_SWITCH -lt '2' ]; then
 	readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD")
 	
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
-		echo "This will effect the following ${#files[@]} x file(s)..."
-		for file in "${!files[@]}"
-		do
-			echo "Array file(s) element $file: ${files[$file]}"
-		done
-	fi
-
-	if [ ${#files[@]} -eq '0' ]; then
-		echo "No file(s) to rename at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW"
-		exit 1
+		if [ ${#files[@]} -eq '0' ]; then
+			echo "No file(s) to rename at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW"
+			exit 1
+		else
+			echo "This will effect the following ${#files[@]} x file(s)..."
+			for file in "${!files[@]}"
+			do
+				echo "Array file(s) element $file: ${files[$file]}"
+			done
+		fi
 	fi
 
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
@@ -396,30 +408,46 @@ if [ $MODE_SWITCH -lt '2' ]; then
 fi
 
 ## Start renaming all folder(s) in array
-if [ $MODE_SWITCH -lt '2' ]; then
+if [ $MODE_SWITCH -gt '0' ]; then
 
 	readarray -t folders < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD")
 	
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
-		echo "This will effect the following ${#folders[@]} x folder(s)..."
-		for folder in "${!folders[@]}"
-		do
-			echo "Array folder(s) element $folder: ${folders[$folder]}"
-		done
-	fi
-
-	if [ ${#folders[@]} -eq '0' ]; then
-		echo "No folder(s) to rename at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW"
-		exit 1
+		if [ ${#folders[@]} -eq '0' ]; then
+			echo "No folder(s) to rename at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW"
+			exit 1
+		else	
+			echo "This will effect the following ${#folders[@]} x folder(s)..."
+			for folder in "${!folders[@]}"
+			do
+				echo "Array folder(s) element $folder: ${folders[$folder]}"
+			done
+		fi
 	fi
 
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
 		echo "Starting renaming folder(s) at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW..."
-		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
-			-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+		if [ $FOLDER_RECREATE_SWITCH -eq '1'  ]; then
+
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
+				-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} \; -exec mkdir -pv {} ";"
+
+		else
+
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
+				-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+		fi
 	else
-		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
-			-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+		if [ $FOLDER_RECREATE_SWITCH -eq '1'  ]; then
+
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
+				-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} \; -exec mkdir -p {} ";"
+
+		else
+
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
+				-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+		fi
 	fi
 
 	## Check last task for errors

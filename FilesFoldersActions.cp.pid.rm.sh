@@ -191,6 +191,13 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "PID File: $PID_PATH_FULL"
 	echo "PID Process ID: $PID"
 
+        echo -n "Config Mode is on "
+	if [ $CONFIG_SWITCH -eq '0' ]; then
+		echo "Parameters"
+	else
+		echo "Config file"
+	fi
+
 	if [ "$sys_log_folder_missing_switch" -eq '1' ]; then
 		echo "Sys log folder: ${SYS_LOG%/*} is missing"
 		echo "Creating it at ${SYS_LOG%/*}"
@@ -316,7 +323,6 @@ else
                 fi
 		## Removing PID entry in PID file
 
-#>>>>>>>>>>>>>>>>>>>>>>>>>>     HERE IS THE BUG     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 #trap 'sed -i -- '/'$PID'/d' $PID_PATH_FULL'  exit
                 sed -i -- '/'$PID'/d' "$PID_PATH_FULL"
                 ## Check last task for errors

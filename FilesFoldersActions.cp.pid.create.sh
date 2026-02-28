@@ -194,11 +194,18 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
         echo "Run as group: $run_as_group_name"
         echo "Run as group gid: $run_as_group_gid"
         echo "Run on host: $run_on_hostname"
+        echo "Verbose is ON"
 	echo "PID file: $PID_PATH_FULL"
         echo "PID: $PID"
 	echo "Folder Source: $FOLDER_SOURCE"
         echo "Folder Target: $FOLDER_TARGET"
-        echo "Verbose is ON"
+
+        echo -n "Config Mode is on "
+	if [ $CONFIG_SWITCH -eq '0' ]; then
+		echo "Parameters"
+	else
+		echo "Config file"
+	fi
         
         if [ "$pid_folder_missing_switch" -eq '1' ]; then
                 echo "PID folder: ${PID_PATH_FULL%/*} is missing"

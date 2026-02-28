@@ -2,19 +2,21 @@
 ## MODIFY IT BEHIND THE = ....NOTHING ELSE
 ## DON'T RENAME IT
 
-## Parameter 1: Folder Target i.e. "/home/backup/mysql/"
-## Parameter 2: Name Part i.e. 		"current*"
-## Parameter 3: Remove Mode Switch	0=Only files
+## Parameter  1: Folder Target i.e. "/home/backup/mysql/"
+## Parameter  2: Name Part i.e. 		"current*"
+## Parameter  3: Remove Mode Switch	0=Only files
 ##                             		1=Files and Folders
 ##                             		2=Only Folders
-## Parameter 4: Remove Files Folders Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to remove. MAX VALUE IS 2 for security reason
-## Parameter 5: Sys log i.e. 		"/var/log/bash/$file_name.log"
-## Parameter 6: Job log i.e.		"/tmp/bash/$file_name.log"
-## Parameter 7: Config Switch       0=Parameters; Default
+## Parameter  4: Remove Files Folders Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to remove. MAX VALUE IS 2 for security reason
+## Parameter  5: Recreate Folder Switch	0=Off
+##                                     	1=On
+## Parameter  6: Sys log i.e. 		"/var/log/bash/$file_name.log"
+## Parameter  7: Job log i.e.		"/tmp/bash/$file_name.log"
+## Parameter  8: Config Switch       0=Parameters; Default
 ##                                  1=Config file
-## Parameter 8: Output Switch      	0=Console
+## Parameter  9: Output Switch      	0=Console
 ##                                 	1=Logfile; Default
-## Parameter 9: Verbose Switch     	0=Off
+## Parameter 10: Verbose Switch     	0=Off
 ##                                 	1=On; Default
 
 FOLDER_TARGET="/home/.backup/mysql/"
@@ -22,6 +24,7 @@ NAME_PART="$(date +%y%m%d -d'1 year ago')*"
 #NAME_PART="current*" 
 MODE_SWITCH=1
 FOLDER_DEEP=1
+FOLDER_RECREATE_SWITCH=1
 SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.rm_sys.log"
 JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.rm_job.log"
 CONFIG_SWITCH=0
