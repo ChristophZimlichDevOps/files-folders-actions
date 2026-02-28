@@ -12,9 +12,11 @@
 ## Parameter  4: Folder Target i.e.     "/tmp/bash/test/"
 ## Parameter  5: Sys log i.e.           "/var/log/bash/$file_name.log"
 ## Parameter  6: Job log i.e.           "/tmp/bash/$file_name.log"
-## Parameter  7: Output Switch          0=Console
+## Parameter  7: Config Switch          0=Parameters; Default
+##                                      1=Config file
+## Parameter  8: Output Switch          0=Console
 ##                                      1=Logfile; Default
-## Parameter  8: Verbose Switch         0=Off
+## Parameter  9: Verbose Switch         0=Off
 ##                                      1=On; Default
 ##
 ## Call it like this:
@@ -25,6 +27,7 @@
 ##      "/tmp/" \
 ##      "/var/log/$file_name.log" \
 ##	"/tmp/$file_name.log" \
+##      "0" \
 ##      "0" \
 ##      "1"
 
@@ -60,6 +63,7 @@ declare    FOLDER_SOURCE
 declare    FOLDER_TARGET
 declare    SYS_LOG
 declare    JOB_LOG
+declare -i CONFIG_SWITCH
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Clear stuff for processing
@@ -83,18 +87,21 @@ FOLDER_SOURCE=$3
 FOLDER_TARGET=$4
 SYS_LOG=$5
 JOB_LOG=$6
-OUTPUT_SWITCH=$7
-VERBOSE_SWITCH=$8
+CONFIG_SWITCH=$7
+OUTPUT_SWITCH=$8
+VERBOSE_SWITCH=$9
 
-## Set the job config file from parameter
-config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
+if [ $CONFIG_SWITCH -eq '1' ];then 
+        ## Set the job config file from parameter
+        config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
+        echo "Using config file $config_file_in for $file_name_full"
 
-## Import stuff from config file
-set -o allexport
-# shellcheck source=$config_file_in disable=SC1091
-. "$config_file_in"
-set +o allexport
+        ## Import stuff from config file
+        set -o allexport
+        # shellcheck source=$config_file_in disable=SC1091
+        . "$config_file_in"
+        set +o allexport
+fi
 
 # Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
@@ -163,77 +170,6 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	exec 3>&1 4>&2
 	trap 'exec 2>&4 1>&3' 0 1 2 3 RETURN
 	exec 1>>"$SYS_LOG" 2>&1
-fi
-
-## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
-## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
-## is running. If another instance is running we pause for 5 seconds and then delete the PID anyway. Normally this script will run
-## in under 150ms and via cron runs every 60 seconds, so if the PID file still exists after 5 seconds then it's a orphan PID file.
-if [ -f "$PID_PATH_FULL" ]; then
-        if [ "$(cat "$PID_PATH_FULL" | grep $PID)" != "" ]; then
-                echo "There is already an entry in PID file $PID_PATH_FULL with PID $PID. EXIT"
-                if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        echo "Please check this. THANKS"
-                        echo "I will now quit"
-                fi
-                exit 2
-        fi
-
-        #sleep 5 #if PID file exists wait 3 seconds and test again, if it still exists delete it and carry on
-        #echo "There appears to be another Process $file_name PID $PID_PATH_FULL is already running, waiting for 5 seconds ..."
-        #rm -f -- "$PID_PATH_FULL"
-fi
-#trap 'echo $PID "\"$FOLDER_SOURCE"\" "\"$FOLDER_TARGET"\"  >> $PID_PATH_FULL' exit
-
-if [ "$PID" = "" ]; then
-        echo "PID Process ID is empty"
-        exit 2
-fi
-
-if [ ! -f "$PID_PATH_FULL" ]; then
-        echo "PID file $PID_PATH_FULL not found"
-        pid_file_missing_switch=1
-fi
-
-# Check if pid folder exists
-if [ ! -d "${PID_PATH_FULL%/*}" ]; then
-        if [ $VERBOSE_SWITCH -eq '1' ]; then
-                mkdir -pv "${PID_PATH_FULL%/*}"
-        else
-                mkdir -p "${PID_PATH_FULL%/*}"
-        fi
-        pid_folder_missing_switch=1
-else
-        pid_folder_missing_switch=0
-fi
-
-# Check if user has write access to sys log file
-if [ ! -w "${PID_PATH_FULL%/*}" ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for PID file ${PID_PATH_FULL%/*}."
-        exit 3
-fi
-
-if [ ! -d "$FOLDER_SOURCE" ]; then
-        echo "Folder Source parameter $FOLDER_SOURCE is not a valid folder path. EXIT"
-        exit 2
-fi
-
-if [ ! -d "$FOLDER_TARGET" ]; then
-        echo "Folder Target parameter $FOLDER_TARGET is not a valid folder path."
-        if [ $VERBOSE_SWITCH -eq '1' ]; then
-                mkdir -pv "${FOLDER_TARGET%/*}"
-        else
-                mkdir -p "${FOLDER_TARGET%/*}"
-        fi
-        folder_target_missing_switch=1
-else
-        folder_target_missing_switch=0
-fi
-
-# Check if user has write access to sys log file
-if [ ! -w "${FOLDER_TARGET%/*}" ]; then
-        echo "$run_as_user_name:$run_as_group_name don't have write access for PID file ${FOLDER_TARGET%/*}."
-        exit 3
 fi
 
 ## Print file name
@@ -305,6 +241,141 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 		echo "Output to sys log file $SYS_LOG"
 		echo "Output to job log file $JOB_LOG"
 	fi
+fi
+
+## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
+## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
+## is running. If another instance is running we pause for 5 seconds and then delete the PID anyway. Normally this script will run
+## in under 150ms and via cron runs every 60 seconds, so if the PID file still exists after 5 seconds then it's a orphan PID file.
+if [ -f "$PID_PATH_FULL" ]; then
+        if [ "$(cat "$PID_PATH_FULL" | grep $PID)" != "" ]; then
+                echo "There is already an entry in PID file $PID_PATH_FULL with PID $PID. EXIT"
+                if [ $VERBOSE_SWITCH -eq '1' ]; then
+                        echo "Please check this. THANKS"
+                        echo "I will now quit"
+                fi
+                exit 2
+        fi
+
+        #sleep 5 #if PID file exists wait 3 seconds and test again, if it still exists delete it and carry on
+        #echo "There appears to be another Process $file_name PID $PID_PATH_FULL is already running, waiting for 5 seconds ..."
+        #rm -f -- "$PID_PATH_FULL"
+fi
+#trap 'echo $PID "\"$FOLDER_SOURCE"\" "\"$FOLDER_TARGET"\"  >> $PID_PATH_FULL' exit
+
+
+## Check for input error(s)
+if [ "$PID_PATH_FULL" = "" ]; then
+        echo "PID File parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ ! -d "${PID_PATH_FULL%/*}" ]; then
+        echo "PID File directory ${PID_PATH_FULL%/*} is not valid. EXIT"
+        exit 2
+fi
+
+if [ "$PID" = "" ]; then
+        echo "PID Process ID is empty"
+        exit 2
+fi
+
+if [[ ! $PID =~ [^[:digit:]] ]]; then
+        echo "PID parameter $PID is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$FOLDER_SOURCE" = "" ]; then
+        echo "Folder Source parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ ! -d "$FOLDER_SOURCE" ]; then
+        echo "Folder Source parameter $FOLDER_SOURCE is not a valid folder path. EXIT"
+        exit 2
+fi
+
+if [ "$FOLDER_TARGET" = "" ]; then
+        echo "Folder Target parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ ! -d "$FOLDER_TARGET" ]; then
+        echo "Folder Target parameter $FOLDER_TARGET is not a valid folder path. EXIT"
+        exit 2
+fi
+
+if [ "$FOLDER_SOURCE" = "$FOLDER_TARGET" ]; then
+        echo "Folder Source parameter $FOLDER_SOURCE is the same like Folder Target $FOLDER_TARGET. EXIT"
+        exit 2
+fi
+
+if [ "$CONFIG_SWITCH" -gt '1' ] ||
+   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$OUTPUT_SWITCH" -gt '1' ] ||
+   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$VERBOSE_SWITCH" -gt '1' ] ||
+   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+# Check if pid folder exists
+if [ ! -d "${PID_PATH_FULL%/*}" ]; then
+        if [ $VERBOSE_SWITCH -eq '1' ]; then
+                mkdir -pv "${PID_PATH_FULL%/*}"
+        else
+                mkdir -p "${PID_PATH_FULL%/*}"
+        fi
+        pid_folder_missing_switch=1
+else
+        pid_folder_missing_switch=0
+fi
+
+# Check if user has write access to sys log file
+if [ ! -w "${PID_PATH_FULL%/*}" ]; then
+        echo "$run_as_user_name:$run_as_group_name don't have write access for PID file ${PID_PATH_FULL%/*}."
+        exit 3
+fi
+
+if [ ! -f "$PID_PATH_FULL" ]; then
+        echo "PID file $PID_PATH_FULL not found"
+        touch "$PID_PATH_FULL"
+        pid_file_missing_switch=1
+fi
+
+
+# Check if user has read access at folder source
+if [ ! -r "$FOLDER_SOURCE" ]; then
+        echo "$run_as_user_name:$run_as_group_name don't have read access folder source $FOLDER_SOURCE"
+        exit 3
+fi
+
+# Check if folder target exists
+if [ ! -d "$FOLDER_TARGET" ]; then
+        echo "Folder Target parameter $FOLDER_TARGET is not a valid folder path."
+        if [ $VERBOSE_SWITCH -eq '1' ]; then
+                mkdir -pv "$FOLDER_TARGET"
+        else
+                mkdir -p "$FOLDER_TARGET"
+        fi
+        folder_target_missing_switch=1
+else
+        folder_target_missing_switch=0
+fi
+
+# Check if user has write access at folder target
+if [ ! -w "$FOLDER_TARGET" ]; then
+        echo "$run_as_user_name:$run_as_group_name don't have write access at folder target $FOLDER_TARGET"
+        exit 3
 fi
 
 FOLDER_SOURCE_1=$(echo "$FOLDER_SOURCE" | cut -d/ -f2)

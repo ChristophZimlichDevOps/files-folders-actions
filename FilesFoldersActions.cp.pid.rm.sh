@@ -164,28 +164,6 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	exec 1>>"$SYS_LOG" 2>&1
 fi
 
-## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
-## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
-## is running. If another instance is running we pause for 5 seconds and then delete the PID anyway. Normally this script will run
-## in under 150ms and via cron runs every 60 seconds, so if the PID file still exists after 5 seconds then it's a orphan PID file.
-#if [ -f "$PID_PATH_FULL" ]; then
-        #sleep 5 #if PID file exists wait 5 seconds and test again, if it still exists delete it and carry on
-        #echo "There appears to be another Process $file_name PID $PID_PATH_FULL is already running, waiting for 5 seconds ..."
-        #rm -f -- "$PID_PATH_FULL"
-#fi
-#trap 'rm -f -- $PID_PATH_FULL' EXIT #EXIT status=0/SUCCESS
-#echo "$PID" > "$PID_PATH_FULL"
-
-if [ ! -f "$PID_PATH_FULL" ]; then
-        echo "PID file $PID_PATH_FULL not found. EXIT"
-        exit 2
- else       
-        if [ $VERBOSE_SWITCH -eq '1' ]; then
-                echo "PID file $PID_PATH_FULL found"
-        fi
-        
-fi
-
 ## Print file name
 if [ "$OUTPUT_SWITCH" -eq '1' ] && \
    [ "$VERBOSE_SWITCH" -eq '0' ]; then
@@ -240,6 +218,69 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "Output to job log file $JOB_LOG"
 	fi
 fi
+
+## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
+## for test purposes it may intermittently update the ports.tcp & ports.udp files unnecessarily. So here we check no other instance
+## is running. If another instance is running we pause for 5 seconds and then delete the PID anyway. Normally this script will run
+## in under 150ms and via cron runs every 60 seconds, so if the PID file still exists after 5 seconds then it's a orphan PID file.
+#if [ -f "$PID_PATH_FULL" ]; then
+        #sleep 5 #if PID file exists wait 5 seconds and test again, if it still exists delete it and carry on
+        #echo "There appears to be another Process $file_name PID $PID_PATH_FULL is already running, waiting for 5 seconds ..."
+        #rm -f -- "$PID_PATH_FULL"
+#fi
+#trap 'rm -f -- $PID_PATH_FULL' EXIT #EXIT status=0/SUCCESS
+#echo "$PID" > "$PID_PATH_FULL"
+
+
+## Check for input error(s)
+if [ "$PID_PATH_FULL" = "" ]; then
+        echo "PID File parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ ! -d "${PID_PATH_FULL%/*}" ]; then
+        echo "PID File directory ${PID_PATH_FULL%/*} is not valid. EXIT"
+        exit 2
+fi
+
+if [ "$PID" = "" ]; then
+        echo "PID Process ID is empty"
+        exit 2
+fi
+
+if [[ ! $PID =~ [^[:digit:]] ]]; then
+        echo "PID parameter $PID is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$CONFIG_SWITCH" -gt '1' ] ||
+   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$OUTPUT_SWITCH" -gt '1' ] ||
+   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$VERBOSE_SWITCH" -gt '1' ] ||
+   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ ! -f "$PID_PATH_FULL" ]; then
+        echo "PID file $PID_PATH_FULL not found. EXIT"
+        exit 2
+ else       
+        if [ $VERBOSE_SWITCH -eq '1' ]; then
+                echo "PID file $PID_PATH_FULL found"
+        fi
+        
+fi
+
 
 ## Lets roll
 ## If no PID exists...

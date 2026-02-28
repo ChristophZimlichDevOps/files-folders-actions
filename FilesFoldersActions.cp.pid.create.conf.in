@@ -8,9 +8,11 @@
 ## Parameter  4: Folder Target i.e.     "/tmp/bash/test/"
 ## Parameter  5: Sys log i.e.           "/var/log/bash/$file_name.log"
 ## Parameter  6: Job log i.e.           "/tmp/bash/$file_name.log"
-## Parameter  7: Output Switch          0=Console
+## Parameter  7: Config Switch          0=Parameters; Default
+##                                      1=Config file
+## Parameter  8: Output Switch          0=Console
 ##                                      1=Logfile; Default
-## Parameter  8: Verbose Switch         0=Off
+## Parameter  9: Verbose Switch         0=Off
 ##                                      1=On; Default
 
 PID_PATH_FULL="/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp.pid"
@@ -19,5 +21,6 @@ FOLDER_SOURCE="/home/.backup/mysql/"
 FOLDER_TARGET="/tmp/bash/FilesFoldersActions/"
 SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp_sys.log"
 JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp_job.log"
+CONFIG_SWITCH=0
 OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1

@@ -10,7 +10,7 @@
 ## Parameter  2: Folder Target i.e.    "/tmp/"
 ## Parameter  3: Name Part Old i.e.    "current*" ONLY wildcards at the beginning and at the end with other real content will work. ONLY wildcards with no other real content will NOT work
 ## Parameter  4: Name Part New i.e.    "$(date +%y%m%d%H%M%S)"
-## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d%*)"
+## Parameter  5: Name Part Delete i.e. "$(date +%y%m%d -d'1 year ago')*"
 ## Parameter  6: Script Path...Where the scripts are stored i.e. "/root/bin/"
 ## Parameter  8: Folder Deep "1" Set the folder deep where File(s) and Folder(s) get found
 ## Parameter  9: Mode Switch   0=Only files
@@ -33,8 +33,9 @@
 ## sh FilesFoldersActions.main.sh \
 ##      "/backup/internal/mysql/" \
 ##      "/backup/external/mysql/" \
-##      "current*" "$(date +%y%m%d%H%M%S)" \
-##      "$(date +%y%m%d%H*)" \
+##      "current*" \
+##      "$(date +%y%m%d%H%M%S)" \
+##      "$(date +%y%m%d -d'1 year ago')" \
 ##      "1" \
 ##      "1" \
 ##      "FilesFoldersActions.cp.sh" \
@@ -42,8 +43,8 @@
 ##      "FilesFoldersActions.rm.sh" \
 ##      "1" \
 ##      "$HOME/bin/linux/shell/FilesFoldersActions/" \
-##      "/var/log/bash/$file_name.log" \
-##      "/tmp/bash/$file_name.log" \
+##      "/tmp/bash/FilesFoldersActions/${file_name}_sys.log" \
+##      "/tmp/bash/FilesFoldersActions/${file_name}_job.log" \
 ##      "0" \
 ##      "1" 
 
@@ -56,17 +57,13 @@
 ## Set Stuff
 version="0.0.1-alpha.1"
 file_name_full="FilesFoldersActions.main.sh"
-file_name="${file_name_full##*/}"
+file_name="${file_name_full%.*}"
 
 run_as_user_name=$(whoami)
 run_as_user_uid=$(id -u "$run_as_user_name")
 run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
-
-## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
 
 ## Check this script is running as root !
 if [ "$run_as_user_uid" != "0" ]; then
@@ -82,12 +79,11 @@ declare    FOLDER_TARGET
 declare    NAME_PART_OLD
 declare    NAME_PART_NEW
 declare    NAME_PART_DELETE
-
 declare -i FOLDER_DEEP
 declare -i MODE_SWITCH
-declare    SCRIPT_SUB_FILE_FOLDERS_CP
-declare    SCRIPT_SUB_FILE_FOLDERS_RENAME
-declare    SCRIPT_SUB_FILE_FOLDERS_RM
+declare    SCRIPT_SUB_FILE_CP
+declare    SCRIPT_SUB_FILE_RENAME
+declare    SCRIPT_SUB_FILE_RM
 declare -i RECREATE_FOLDER_SWITCH
 declare    SCRIPT_PATH
 declare    SYS_LOG
@@ -95,8 +91,11 @@ declare    JOB_LOG
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Needed for processing
-declare -i sys_log_file_missing_switch
-declare -i job_log_file_missing_switch
+declare    config_file_in
+declare -i sys_log_folder_missing_switch=0
+declare -i sys_log_file_missing_switch=0
+declare -i job_log_folder_missing_switch=0
+declare -i job_log_file_missing_switch=0
 declare -i status
 
 # Set parameters
@@ -104,18 +103,24 @@ PID_PATH_FULL=$1
 FOLDER_SOURCE=$2
 FOLDER_TARGET=$3
 NAME_PART_OLD=$4 
-NAME_PART_DELETE=$5
-FOLDER_DEEP=$6
-MODE_SWITCH=$7
-SCRIPT_SUB_FILE_FOLDERS_CP=$8
-SCRIPT_SUB_FILE_FOLDERS_RENAME=$9
-SCRIPT_SUB_FILE_FOLDERS_RM=${10}
-RECREATE_FOLDER_SWITCH=${11}
-SCRIPT_PATH=${12}
-SYS_LOG=${13}
-JOB_LOG=${14}
-OUTPUT_SWITCH=${15}
-VERBOSE_SWITCH=${16}
+NAME_PART_NEW=$5 
+NAME_PART_DELETE=$6
+FOLDER_DEEP=$7
+MODE_SWITCH=$8
+SCRIPT_SUB_FILE_CP=$9
+SCRIPT_SUB_FILE_RENAME=${10}
+SCRIPT_SUB_FILE_RM=${11}
+RECREATE_FOLDER_SWITCH=${12}
+SCRIPT_PATH=${13}
+SYS_LOG=${14}
+JOB_LOG=${15}
+CONFIG_SWITCH=${16}
+OUTPUT_SWITCH=${17}
+VERBOSE_SWITCH=${18}
+
+## Set the job config FILE from parameter
+config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
+echo "Using config file $config_file_in for $file_name_full"
 
 ## Import stuff from config FILE
 set -o allexport
@@ -192,44 +197,6 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	exec 1>>"$SYS_LOG" 2>&1
 fi
 
-## Check folder sources and targets in PID file
-# shellcheck source=$config_file_in disable=SC1091
-. "$SCRIPT_PATH""files-folders-cp-pid-create.sh" "$PID_PATH_FULL" "$$" "$FOLDER_SOURCE" "$FOLDER_TARGET" "$OUTPUT" "$VERBOSE"
-## Check last task for error(s)
-status=$?
-if [ $status != 0 ]; then
-	echo "Error with PID $PID_PATH_FULL and Check Copying from Folder Source $FOLDER_SOURCE to Folder Target $FOLDER_TARGET, code="$status;
-        if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-                echo "!!! Master Module $file_name_full v$version stopped with error(s) !!!"
-        fi
-        exit $status
-else
-        if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-                echo "Checking PID $PID_PATH_FULL and Copying from Folder Source $FOLDER_SOURCE to Folder Target $FOLDER_TARGET finished"
-        fi
-fi
-
-## Remove PID entry from PID file or the hole PID file when job is finished
-echo "When job is done clean from PID $PID_PATH_FULL PID Process ID $$ entry"
-# shellcheck disable=SC2154
-echo ". ${SCRIPT_PATH}files-folders-cp-pid-rm.sh $PID_PATH_FULL $$ $OUTPUT $VERBOSE"
-trap '. -- ${SCRIPT_PATH}files-folders-cp-pid-rm.sh" '"$PID_PATH_FULL"' '$$' '"$OUTPUT"' '"$VERBOSE"' ' EXIT
-
-## Check last task for error(s)
-status=$?
-if [ $status != 0 ]; then
-        # shellcheck disable=SC2154
-        echo "Error with PID $PID_PATH_FULL and finding PID Process ID $PID_process_id, code=$status";
-        if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-                echo "!!! Master Module $file_name_full v$version stopped with error(s) !!!"
-        fi
-        exit $status
-else
-        if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-                echo "Removing entry in PID $PID_PATH_FULL with PID Process ID $PID_process_id finished"
-        fi
-fi
-
 if [ "$FOLDER_DEEP" = "" ] || \
    [ "$FOLDER_DEEP" -gt '2' ] || \
    [ "$FOLDER_DEEP" -eq '0' ]; then
@@ -259,7 +226,14 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
         echo "Run as group gid: $run_as_group_gid"
         echo "Run on host: $run_on_hostname"
         echo "Verbose is ON"
-        echo "Folder(s) Deep $FOLDER_DEEP"
+        echo "Files Folder Main PID: $PID_PATH_FULL"
+        echo "Folder source: $FOLDER_SOURCE"
+        echo "Folder target: $FOLDER_TARGET"
+        echo "Name part old: $NAME_PART_OLD" 
+        echo "Name part new: $NAME_PART_NEW"
+        echo "Name part delete: $NAME_PART_DELETE"
+        echo "Script path: $SCRIPT_PATH"
+        echo "Folder deep: $FOLDER_DEEP"
 
         echo -n "Mode for file(s) is "
         if [ "$MODE_SWITCH" -eq '2' ]; then
@@ -311,6 +285,16 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 fi
 
 ## Check for input error(s)
+if [ "$PID_PATH_FULL" = "" ]; then
+        echo "PID File parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ ! -d "${PID_PATH_FULL%/*}" ]; then
+        echo "PID File directory ${PID_PATH_FULL%/*} is not valid. EXIT"
+        exit 2
+fi
+
 if [ "$FOLDER_SOURCE" = "" ]; then
         echo "Folder Source parameter is empty. EXIT"
         exit 2
@@ -351,6 +335,38 @@ if [ "$NAME_PART_DELETE" = "" ]; then
         exit 2
 fi
 
+if [ "$FOLDER_DEEP" = "" ]; then
+        echo "Script Path parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ "$MODE_SWITCH" -gt '1' ] ||
+   [[ ! $MODE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Recreate Folder Switch parameter $MODE_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$SCRIPT_SUB_FILE_CP" = "" ]; then
+        echo "Script Sub file copy parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ "$SCRIPT_SUB_FILE_RENAME" = "" ]; then
+        echo "Script Sub file rename parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ "$SCRIPT_SUB_FILE_RM" = "" ]; then
+        echo "Script Sub file remove parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ "$RECREATE_FOLDER_SWITCH" -gt '1' ] ||
+   [[ ! $RECREATE_FOLDER_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Recreate Folder Switch parameter $RECREATE_FOLDER_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
 if [ "$SCRIPT_PATH" = "" ]; then
         echo "Script Path parameter is empty. EXIT"
         exit 2
@@ -361,78 +377,116 @@ if [ ! -d "$SCRIPT_PATH" ]; then
         exit 2
 fi
 
-if [ $VERBOSE_SWITCH -eq '1' ]; then
-        echo "Files Folder AIO PID: $PID_PATH_FULL"
-        echo "Folder source: $FOLDER_SOURCE"
-        echo "Folder target: $FOLDER_TARGET"
-        echo "Name part old: $NAME_PART_OLD" 
-        echo "Name part new: $NAME_PART_NEW"
-        echo "Name part delete: $NAME_PART_DELETE"
-        echo "Script path: $SCRIPT_PATH"
-        echo "Folder deep: $FOLDER_DEEP"
-        echo "Mode switch: $MODE_SWITCH"
-        echo "Recreate folder switch: $RECREATE_FOLDER_SWITCH"
-        echo "Sys log: $SYS_LOG"
-        echo "Job log: $JOB_LOG"
-        echo "Output switch: $OUTPUT_SWITCH"
-        echo "Verbose switch: $VERBOSE_SWITCH"
+if [ "$CONFIG_SWITCH" -gt '1' ] ||
+   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$OUTPUT_SWITCH" -gt '1' ] ||
+   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$VERBOSE_SWITCH" -gt '1' ] ||
+   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
+        exit 2
 fi
 
 ## Lets roll
 ## Copy file(s) and/or folder(s) from source to target folder
 # shellcheck disable=SC1090
-. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_CP" \
+        "$PID_PATH_FULL" \
         "$FOLDER_SOURCE" \
         "$FOLDER_TARGET" \
         "$NAME_PART_NEW" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
+        "$SCRIPT_PATH" \
+        "$SCRIPT_SUB_FILE_PID_CREATE" \
+        "$SCRIPT_SUB_FILE_PID_RM" \
+        "$SYS_LOG" \
+        "$JOB_LOG" \
+        "$CONFIG_SWITCH" \
         "$OUTPUT_SWITCH" \
         "$VERBOSE_SWITCH"
 
 ## Rename file(s) and/or folder(s) at source folder
 # shellcheck disable=SC1090
-. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_RENAME" \
         "$NAME_PART_OLD" \
         "$NAME_PART_NEW" \
         "$FOLDER_SOURCE" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
         "$RECREATE_FOLDER_SWITCH" \
+        "$SYS_LOG" \
+        "$JOB_LOG" \
+        "$CONFIG_SWITCH" \
         "$OUTPUT_SWITCH" \
         "$VERBOSE_SWITCH"
 
 ## Rename file(s) and/or folder(s) at target folder
 # shellcheck disable=SC1090
-. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RENAME" \
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_RENAME" \
         "$NAME_PART_OLD" \
         "$NAME_PART_NEW" \
         "$FOLDER_TARGET" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
         "$RECREATE_FOLDER_SWITCH" \
+        "$SYS_LOG" \
+        "$JOB_LOG" \
+        "$CONFIG_SWITCH" \
         "$OUTPUT_SWITCH" \
         "$VERBOSE_SWITCH"
 
 ## Remove file(s) and/or folder(s) at source folder
 # shellcheck disable=SC1090
-. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_RM" \
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_RM" \
         "$FOLDER_SOURCE" \
         "$NAME_PART_DELETE" \
         "$MODE_SWITCH" \
         "$FOLDER_DEEP" \
+        "$SYS_LOG" \
+        "$JOB_LOG" \
+        "$CONFIG_SWITCH" \
+        "$OUTPUT_SWITCH" \
+        "$VERBOSE_SWITCH"
+
+## Remove file(s) and/or folder(s) at target folder
+# shellcheck disable=SC1090
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_RM" \
+        "$FOLDER_TARGET" \
+        "$NAME_PART_DELETE" \
+        "$MODE_SWITCH" \
+        "$FOLDER_DEEP" \
+        "$SYS_LOG" \
+        "$JOB_LOG" \
+        "$CONFIG_SWITCH" \
         "$OUTPUT_SWITCH" \
         "$VERBOSE_SWITCH"
 
 ## For testing: Copy back testing file(s) and/or folder(s)
 # shellcheck disable=SC1090
-. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_FOLDERS_CP" \
-        "/home/.backup/mysql/full/" \
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_CP" \
+       "$PID_PATH_FULL" \
+        "/home/.backup/mysql/root/" \
         "/home/.backup/mysql/" \
         "*" \
         "2" \
         "1" \
-        "0"
+        "$SCRIPT_PATH" \
+        "$SCRIPT_SUB_FILE_PID_CREATE" \
+        "$SCRIPT_SUB_FILE_PID_RM" \
+        "$SYS_LOG" \
+        "$JOB_LOG" \
+        "$CONFIG_SWITCH" \
+        "$OUTPUT_SWITCH" \
+        "$VERBOSE_SWITCH"
 
 if [ "$VERBOSE_SWITCH" -eq '1' ]; then
         sh OutputStyler "middle"

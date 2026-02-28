@@ -6,4 +6,5 @@
 	"/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp_sys.log" \
 	"/tmp/bash/FilesFoldersActions/FilesFoldersActions.cp_job.log" \
     "0" \
+    "0" \
     "1"

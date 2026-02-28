@@ -1,16 +1,17 @@
- sh FilesFoldersActions.main.sh \
-    "/backup/internal/mysql/" \
-    "/backup/external/mysql/" \
-    "current*" "$(date +%y%m%d%H%M%S)" \
-    "$(date +%y%m%d%H*)" \
+sh FilesFoldersActions.main.sh \
+    "/home/.backup/mysql/" \
+    "/tmp/bash/FilesFoldersActions/" \
+    "current*" \
+    "$(date +%y%m%d%H%M%S)" \
+    "$(date +%y%m%d -d'1 year ago')" \
     "1" \
     "1" \
     "FilesFoldersActions.cp.sh" \
     "FilesFoldersActions.rename.sh" \
     "FilesFoldersActions.rm.sh" \
     "1" \
-    "$HOME/bin/linux/shell/FilesFoldersActions/" \
-    "/var/log/bash/$file_name.log" \
-    "/tmp/bash/$file_name.log" \
+    "$HOME/bin/linux/shell/local/FilesFoldersActions/" \
+    "/tmp/bash/FilesFoldersActions/${file_name}_sys.log" \
+    "/tmp/bash/FilesFoldersActions/${file_name}_job.log" \
     "0" \
     "1" 

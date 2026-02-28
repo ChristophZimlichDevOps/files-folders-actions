@@ -17,11 +17,11 @@
 ##                                     	1=On
 ## Parameter  7: Sys log i.e. 			"/var/log/bash/$file_name.log"
 ## Parameter  8: Job log i.e. 			"/tmp/bash/$file_name.log"
-## Parameter  9: Sys log i.e.		    "/var/log/bash/$file_name.log"
-## Parameter 10: Job log i.e.		    "/tmp/bash/$file_name.log"
-## Parameter 11: Output Switch      	0=Console
+## Parameter  9: Config Switch          0=Parameters; Default
+##                                      1=Config file
+## Parameter 10: Output Switch      	0=Console
 ##                                  	1=Logfile; Default
-## Parameter 12: Verbose Switch     	0=Off
+## Parameter 11: Verbose Switch     	0=Off
 ##                                  	1=On; Default
 ##
 ## Call it like this:
@@ -34,6 +34,7 @@
 ##		"0" \
 ##		"/var/log/bash/$file_name.log" \
 ##		"/tmp/bash/$file_name.log" \
+##		"0" \
 ##		"0" \
 ##		"1"
 
@@ -66,9 +67,9 @@ declare	   FOLDER_TARGET
 declare -i MODE_SWITCH
 declare -i FOLDER_DEEP
 declare -i RECREATE_FOLDER_SWITCH
-declare	   SCRIPT_PATH
 declare	   SYS_LOG
 declare	   JOB_LOG
+declare -i CONFIG_SWITCH
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Needed for processing
@@ -76,6 +77,7 @@ declare    config_file_in
 declare    mode
 declare    name_part_old_clean
 declare -a files
+declare -a folders
 declare -i sys_log_folder_missing_switch=0
 declare -i sys_log_file_missing_switch=0
 declare -i job_log_folder_missing_switch=0
@@ -91,18 +93,21 @@ FOLDER_DEEP=$5
 RECREATE_FOLDER_SWITCH=$6
 SYS_LOG=$7
 JOB_LOG=$8
-OUTPUT_SWITCH=$9
-VERBOSE_SWITCH=${10}
+CONFIG_SWITCH=$9
+OUTPUT_SWITCH=${10}
+VERBOSE_SWITCH=${11}
 
-## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
+#if [ $CONFIG_SWITCH -eq '1' ]; then 
+	## Set the job config FILE from parameter
+	config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
+	echo "Using config file $config_file_in for $file_name_full"
 
-## Import stuff from config FILE
-set -o allexport
-# shellcheck source=$config_file_in disable=SC1091
-. "$config_file_in"
-set +o allexport
+	## Import stuff from config FILE
+	set -o allexport
+	# shellcheck source=$config_file_in disable=SC1091
+	. "$config_file_in"
+	set +o allexport
+#fi
 
 # Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
@@ -221,6 +226,10 @@ if [ "$VERBOSE_SWITCH" -eq '1' ]; then
     echo "Run as group gid: $run_as_group_gid"
     echo "Run on host: $run_on_hostname"
 	echo "Verbose is ON"
+	echo "$mode Name Part Old: $NAME_PART_OLD"
+	echo "$mode Name Part New: $NAME_PART_NEW"
+	echo "Folder Source: $FOLDER_TARGET"
+    echo "Search for file(s) like: $FOLDER_TARGET$NAME_PART_OLD"
 	
 	echo -n "Renaming file(s) is "
 	if [ "$MODE_SWITCH" -gt '1' ]; then
@@ -293,15 +302,32 @@ if [ "$FOLDER_TARGET" = "" ]; then
 fi
 
 if [ ! -d "$FOLDER_TARGET" ]; then
-	echo "Folder Source parameter $FOLDER_TARGET is not a valid folder path. EXIT"
+	echo "Folder Source parameter $FOLDER_TARGET is not a valid. EXIT"
 	exit 1
 fi
 
-if [ $VERBOSE_SWITCH -eq '1' ]; then
-	echo "$mode Name Part Old: $NAME_PART_OLD"
-	echo "$mode Name Part New: $NAME_PART_NEW"
-	echo "Folder Source: $FOLDER_TARGET"
-    echo "Search for file(s) like: $FOLDER_TARGET$NAME_PART_OLD"
+if [ "$MODE_SWITCH" -gt '1' ] ||
+   [[ ! $MODE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Config Switch parameter $MODE_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$CONFIG_SWITCH" -gt '1' ] ||
+   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$OUTPUT_SWITCH" -gt '1' ] ||
+   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$VERBOSE_SWITCH" -gt '1' ] ||
+   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
+        exit 2
 fi
 
 ## Lets roll

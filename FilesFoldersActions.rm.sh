@@ -28,6 +28,7 @@
 ##		"/var/log/bash/$file_name.log" \
 ##		"/tmp/bash/$file_name.log" \
 ##		"0" \
+##		"0" \
 ##		"1"
 
 ## Clear console to debug that stuff better
@@ -70,12 +71,20 @@ declare    FOLDER_TARGET
 declare    NAME_PART
 declare	   MODE_SWITCH
 declare    FOLDER_DEEP
+declare -i CONFIG_SWITCH
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Clear stuff need for processing
 declare    config_file_in
 declare -a files
 declare -a folders
+declare -i operation_mode_switch
+declare -i date_year
+declare -i date_month
+declare -i date_day
+declare    date_tmp_1
+declare    date_tmp_2
+declare    date_tmp_3
 declare -i sys_log_folder_missing_switch=0
 declare -i sys_log_file_missing_switch=0
 declare -i job_log_folder_missing_switch=0
@@ -89,18 +98,21 @@ MODE_SWITCH=$3
 FOLDER_DEEP=$4
 SYS_LOG=$5
 JOB_LOG=$6
-OUTPUT_SWITCH=$7
-VERBOSE_SWITCH=$8
+CONFIG_SWITCH=$7
+OUTPUT_SWITCH=$8
+VERBOSE_SWITCH=$9
 
-## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
+#if [ $CONFIG_SWITCH -eq '1' ]; then 
+	## Set the job config FILE from parameter
+	config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
+	echo "Using config file $config_file_in for $file_name_full"
 
-## Import stuff from config FILE
-#set -o allexport
-# shellcheck source=$config_file_in disable=SC1091
-#. "$config_file_in"
-#set +o allexport
+	## Import stuff from config FILE
+	set -o allexport
+	# shellcheck source=$config_file_in disable=SC1091
+	. "$config_file_in"
+	set +o allexport
+#fi
 
 # Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
@@ -183,13 +195,6 @@ if [ "$MODE_SWITCH" -eq '2' ]; then
 	mode="folder(s)"
 fi
 
-if [ "$FOLDER_DEEP" = "" ] || \
-   [ "$FOLDER_DEEP" -gt '2' ] || \
-   [ "$FOLDER_DEEP" -eq '0' ]; then
-		echo "Remove Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1"
-		FOLDER_DEEP=1
-fi
-
 ## Print file name
 if [ "$OUTPUT_SWITCH" -eq '1' ] && \
    [ "$VERBOSE_SWITCH" -eq '0' ]; then
@@ -207,7 +212,7 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
     sh OutputStyler "start"
 	sh OutputStyler "start"
 	sh OutputStyler "middle"
-	echo "!!! ATTENTION !!!		Parameter 3: Name Part Old i.e. current*					   !!! ATTENTION !!!"
+	echo "!!! ATTENTION !!!						Parameter 3: Name Part				   !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		ONLY wildcards at the beginning and at the end with other real content will work   !!! ATTENTION !!!"
     echo "!!! ATTENTION !!!		ONLY wildcards with no other real content will NOT work				   !!! ATTENTION !!!"
 	echo "Filename: $file_name_full"
@@ -218,6 +223,8 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Run as group gid: $run_as_group_gid"
 	echo "Run on host: $run_on_hostname"
 	echo "Verbose is ON"
+	echo "Folder Target: $FOLDER_TARGET"
+	echo "$mode Name Part: $NAME_PART"
 
 	echo -n "Removing File(s) is "
 	if [ "$MODE_SWITCH" -eq '2' ]; then
@@ -250,7 +257,7 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 		echo "Creating it at $JOB_LOG"
 	fi
 
-        if [ "$job_log_folder_missing_switch" -eq '1' ]; then
+    if [ "$job_log_folder_missing_switch" -eq '1' ]; then
 		echo "Sys log folder: ${JOB_LOG%/*} is missing"
 		echo "Creating it at ${JOB_LOG%/*}"
 	fi
@@ -278,21 +285,93 @@ if [ "$NAME_PART" = "" ]; then
 	exit 1
 fi
 
-if [ "$FOLDER_DEEP" -gt '2' ] || \
-   [ "$FOLDER_DEEP" -eq '0' ] || \
-   [ "$FOLDER_DEEP" = "" ]; then
-   		echo "Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. EXIT"
-		exit 1
+if [ "$MODE_SWITCH" -gt '1' ] ||
+   [[ ! $MODE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Mode Switch parameter $MODE_SWITCH is not a valid. EXIT"
+        exit 2
 fi
 
-if [ $VERBOSE_SWITCH -eq '1' ]; then
-	echo "Folder Target: $FOLDER_TARGET"
-	echo "$mode Name Part: $NAME_PART"
+if [ "$FOLDER_DEEP" = "" ] || \
+   [ "$FOLDER_DEEP" -gt '2' ] || \
+   [ "$FOLDER_DEEP" -eq '0' ]; then
+		echo "Remove Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1"
+		FOLDER_DEEP=1
+fi
+
+if [ "$CONFIG_SWITCH" -gt '1' ] ||
+   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$OUTPUT_SWITCH" -gt '1' ] ||
+   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$VERBOSE_SWITCH" -gt '1' ] ||
+   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
+        exit 2
 fi
 
 ## Lets roll
-readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART")
-readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART")
+## If name_part is no pure 10 digit as timestamp
+if [ ${#NAME_PART} -gt '7' ] || \
+   [[ ! $NAME_PART =~ [^[:digit:]] ]]; then
+		operation_mode_switch=0
+
+		readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" )
+		readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" )
+
+else
+		if [ "$(echo "$NAME_PART" | rev | cut -b 1)" != "*" ]; then
+			echo "Something is wrong here..."
+			echo "I accept only one wildcard on the last position. That's * "
+			echo "Please check this. EXIT"
+			exit 1
+		fi
+
+		date_year=$(echo "$NAME_PART" | cut -b 1-2)
+		date_month=$(echo "$NAME_PART" | cut -b 3-4)
+		date_day=$(echo "$NAME_PART" | cut -b 5-6)
+
+		if [ $VERBOSE_SWITCH -eq '1' ]; then
+			echo "date_year $date_year"
+			echo "date_month $date_month"
+			echo "date_day $date_day"
+		fi
+
+		if [ "$date_month" -eq '1' ];then
+			## If months is January
+			operation_mode_switch=1
+			date_tmp_1="\"?${date_year}01[1-$date_day]*"\"
+			date_tmp_2="\"?[0-$((date_year-1))?[1-12][1-31]*"\"
+
+			readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) )
+			readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) )
+
+		else
+			## If months is not January
+			operation_mode_switch=2
+
+			#?[20-21]?[1-12][1-31]*
+			#?[0-24]?[1-12][1-31]*
+			date_tmp_1="$date_year?[1-$date_month][1-$date_day]*"
+			date_tmp_2="$date_year?[1-$((date_month-1))][1-31]*"
+			date_tmp_3="?[0-$((date_year-1))]?[1-12][1-31]*"
+
+			if [ $VERBOSE_SWITCH -eq '1' ]; then
+				echo "date_tmp_1 $date_tmp_1"
+				echo "date_tmp_2 $date_tmp_2"
+				echo "date_tmp_3 $date_tmp_3"
+			fi
+	
+			readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) )
+			readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) )
+		fi
+fi
 
 if [ $VERBOSE_SWITCH -eq '1' ]; then
 	echo "Remove $mode in $FOLDER_TARGET with name like $NAME_PART started"
@@ -302,8 +381,8 @@ fi
 if [ "$MODE_SWITCH" -lt '2' ]; then
 	## If job is file(s) only and no file(s) are present with current parameters
 	if [ ${#files[@]} -eq '0' ]; then
-		echo "You selected $mode to remove...But there are NO $mode with your parameters. EXIT"
-		exit 1
+		echo "You selected $mode to remove...But there are NO $mode with your parameters"
+		#exit 1
 	fi
 
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
@@ -315,32 +394,56 @@ if [ "$MODE_SWITCH" -lt '2' ]; then
 		done
 
 		echo "Starting removing file(s) now..."
-		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
-			-exec rm -f -v --interactive=never {} ";"
+
+		if [ $operation_mode_switch -eq '0' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
+				-exec rm -f -v --interactive=never {} ";"
+		fi
+
+		if [ $operation_mode_switch -eq '1' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
+				-exec rm -f -v --interactive=never {} ";"
+		fi
+
+		if [ $operation_mode_switch -eq '2' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
+				-exec rm -f -v --interactive=never {} ";"
+		fi
+
 	else
-		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
-			-exec rm -f --interactive=never {} ";"
+		if [ $operation_mode_switch -eq '0' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
+				-exec rm -f --interactive=never {} ";"
+		fi
+
+		if [ $operation_mode_switch -eq '1' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
+				-exec rm -f --interactive=never {} ";"
+		fi
+
+		if [ $operation_mode_switch -eq '2' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
+				-exec rm -f --interactive=never {} ";"
+		fi
 	fi
 fi
-
 ## Check last task for error(s)
 status=$?
 if [ $status != 0 ]; then
-        # shellcheck disable=SC2154
-        echo "Error removing file(s) at $FOLDER_TARGET with name like $NAME_PART, code=$status, EXIT"
-        if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-                echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-        fi
-        exit $status
+		# shellcheck disable=SC2154
+		echo "Error removing file(s) at $FOLDER_TARGET with name like $NAME_PART, code=$status, EXIT"
+		if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+				echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+		fi
+		exit $status
 else
-        if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+		if [ "$VERBOSE_SWITCH" -eq '1' ]; then
 			echo "Removing file(s) at $FOLDER_TARGET with name like $NAME_PART finished successfully"
-        fi
+		fi
 fi
 
 ## Job containing folder(s)
 if [ "$MODE_SWITCH" -gt '0' ]; then
-
 	## If job is folder(s) only and no folder(s) are present with current parameters
 	if [ ${#folders[@]} -eq '0' ]; then
 		echo "You selected $mode to remove...But there are NO $mode with your parameters. Please check this. EXIT"
@@ -356,11 +459,38 @@ if [ "$MODE_SWITCH" -gt '0' ]; then
 		done
 
 		echo "Starting removing folder(s) now..."
-		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-			-exec rmdir --ignore-fail-on-non-empty -v {} ";"
+
+		if [ $operation_mode_switch -eq '0' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
+				-exec rmdir --ignore-fail-on-non-empty -v {} ";"
+		fi
+
+		if [ $operation_mode_switch -eq '1' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
+				-exec rmdir --ignore-fail-on-non-empty -v {} ";"
+		fi
+
+		if [ $operation_mode_switch -eq '2' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
+				-exec rmdir --ignore-fail-on-non-empty -v {} ";"
+		fi
+
 	else
-		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-			-exec rmdir --ignore-fail-on-non-empty {} ";"	
+
+		if [ $operation_mode_switch -eq '0' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
+				-exec rmdir --ignore-fail-on-non-empty {} ";"
+		fi
+
+		if [ $operation_mode_switch -eq '1' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
+				-exec rmdir --ignore-fail-on-non-empty {} ";"
+		fi
+
+		if [ $operation_mode_switch -eq '2' ]; then
+			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
+				-exec rmdir --ignore-fail-on-non-empty {} ";"
+		fi	
 	fi
 fi
 

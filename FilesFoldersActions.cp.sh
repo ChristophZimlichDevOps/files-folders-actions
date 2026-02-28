@@ -13,14 +13,16 @@
 ## Parameter  5: Copy Mode Switch   0=Copy only files
 ##                                  1=Copy files and folders
 ##                                  2=Copy only folders
-## Parameter  6: Script path i.e.   "/root/bin/linux/shell/FilesFoldersActions/"
+## Parameter  6: Script path i.e.   "$HOME/bin/linux/shell/FilesFoldersActions/"
 ## Parameter  7: Sub Script for creating PID i.e. "FilesFoldersActions.cp.pid.create.sh"
 ## Parameter  8: Sub Script for removing PID i.e. "FilesFoldersActions.cp.pid.rm.sh"
 ## Parameter  9: Sys log i.e.		"/var/log/bash/$file_name.log"
 ## Parameter 10: Job log i.e.		"/tmp/bash/$file_name.log"
-## Parameter 11: Output Switch      0=Console
+## Parameter 11: Config Switch      0=Parameters; Default
+##                                  1=Config file
+## Parameter 12: Output Switch      0=Console
 ##                                  1=Logfile; Default
-## Parameter 12: Verbose Switch     0=Off
+## Parameter 13: Verbose Switch     0=Off
 ##                                  1=On; Default
 ##
 ## Call it like this:
@@ -36,6 +38,7 @@
 ##		"FilesFoldersActions.cp.pid.rm.sh" \
 ##		"/var/log/bash/$file_name.log" \
 ##      "/tmp/bash/$file_name.log" \
+##		"0" \
 ##		"0" \
 ##		"1"
 
@@ -76,40 +79,46 @@ declare	   SCRIPT_SUB_FILE_PID_CREATE
 declare	   SCRIPT_SUB_FILE_PID_RM
 declare	   SYS_LOG
 declare	   JOB_LOG
+declare -i CONFIG_SWITCH
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Need for processing
-declare -i sys_log_file_missing_switch
-declare -i job_log_file_missing_switch
+declare -i sys_log_folder_missing_switch=0
+declare -i sys_log_file_missing_switch=0
+declare -i job_log_folder_missing_switch=0
+declare -i job_log_file_missing_switch=0
 declare -a files
 declare -a folders
 declare -i status
 
-## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/FilesFoldersActions.loc/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
-#config_file_in=$1
-
 ## Set variables
-PID_PATH_FULL="$1"
-FOLDER_SOURCE="$2"
-FOLDER_TARGET="$3"
-NAME_PART="$4"
+PID_PATH_FULL=$1
+FOLDER_SOURCE=$2
+FOLDER_TARGET=$3
+NAME_PART=$4
 MODE_SWITCH=$5
 FOLDER_DEEP=$6
-SCRIPT_PATH="$7"
-SCRIPT_SUB_FILE_PID_CREATE="$8"
-SCRIPT_SUB_FILE_PID_RM="$9"
-SYS_LOG="${10}"
-JOB_LOG="${11}"
-OUTPUT_SWITCH=${12}
-VERBOSE_SWITCH=${13}
+SCRIPT_PATH=$7
+SCRIPT_SUB_FILE_PID_CREATE=$8
+SCRIPT_SUB_FILE_PID_RM=$9
+SYS_LOG=${10}
+JOB_LOG=${11}
+CONFIG_SWITCH=${12}
+OUTPUT_SWITCH=${13}
+VERBOSE_SWITCH=${14}
 
-## Import stuff from config file
-set -o allexport
-# shellcheck source=$config_file_in disable=SC1091
-. "$config_file_in"
-set +o allexport
+if [ $CONFIG_SWITCH -eq '1' ]; then
+	## Set the job config FILE from parameter
+	config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
+	echo "Using config file $config_file_in for $file_name_full"
+	#config_file_in=$1
+
+	## Import stuff from config file
+	set -o allexport
+	# shellcheck source=$config_file_in disable=SC1091
+	. "$config_file_in"
+	set +o allexport
+fi
 
 # Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
@@ -180,13 +189,6 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	exec 1>>"$SYS_LOG" 2>&1
 fi
 
-## Print file name
-if [ $VERBOSE_SWITCH -eq '1' ]; then
-	sh OutputStyler "start"
-	sh OutputStyler "start"
-    echo ">>> Sub Module $file_name_full v$version starting >>>"
-fi
-
 if [ $MODE_SWITCH -eq '0' ]; then
 	mode="File(s)"
 fi
@@ -197,80 +199,6 @@ fi
 
 if [ $MODE_SWITCH -eq '2' ]; then
 	mode="Folder(s)"
-fi
-
-PID=$$
-echo "PID: $PID"
-
-## Print PID
-if [ $VERBOSE_SWITCH -eq '1' ]; then
-    echo "PID is $PID"
-fi
-
-## Check folder sources and targets in PID file
-. "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_CREATE" \
-	"$PID_PATH_FULL" \
-	"$$" \
-	"$FOLDER_SOURCE" \
-	"$FOLDER_TARGET" \
-	"$OUTPUT_SWITCH" \
-	"$VERBOSE_SWITCH"
-
-## Check last task for error(s)
-status=$?
-if [ $status != 0 ]; then
-	echo "Error with PID $PID_PATH_FULL and Check Copying from Folder Source $FOLDER_SOURCE \
-	to Folder Target $FOLDER_TARGET, code="$status
-
-	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-		echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-	fi
-	exit $status
-
-else
-
-	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-		echo "Checking PID $PID_PATH_FULL and Copying from Folder Source $FOLDER_SOURCE \
-		to Folder Target $FOLDER_TARGET finished"
-	fi
-
-fi
-
-## Remove PID from PID file when job is finished
-echo "When job is done clean from PID $PID_PATH_FULL PID Process ID $$ entry"
-echo ". $SCRIPT_PATH$SCRIPT_SUB_FILE_PID_RM \
-	$PID_PATH_FULL \
-	$$ \
-	$OUTPUT_SWITCH $VERBOSE_SWITCH" \
-	> "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_RM"
-trap '. -- $SCRIPT_PATH"$SCRIPT_SUB_FILE_PID_RM " \
-	'"$PID_PATH_FULL"' \
-	'$$' '"$OUTPUT_SWITCH"' \
-	'"$VERBOSE_SWITCH"' ' EXIT
-
-## Check last task for error(s)
-status=$?
-if [ $status != 0 ]; then
-	echo "Error with PID $PID_PATH_FULL and finding PID Process ID $PID_PROCESS_ID, code=$status";
-
-	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-		echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
-	fi
-
-	exit $status
-else
-
-	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
-		echo "Removing entry in PID $PID_PATH_FULL with PID Process ID $PID_PROCESS_ID finished"
-	fi
-
-fi
-
-if [ "$FOLDER_DEEP" = "" ] || \
-   [ "$FOLDER_DEEP" -gt '2' ] || \
-   [ "$FOLDER_DEEP" -eq '0' ]; then
-   		echo "Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1"
-		FOLDER_DEEP=1
 fi
 
 ## Print file name
@@ -337,6 +265,17 @@ if [ $VERBOSE_SWITCH -eq '1' ]; then
 	fi
 fi
 
+## Check for input error(s)
+if [ "$PID_PATH_FULL" = "" ]; then
+        echo "PID File parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ ! -d "${PID_PATH_FULL%/*}" ]; then
+        echo "PID File directory ${PID_PATH_FULL%/*} is not valid. EXIT"
+        exit 2
+fi
+
 if [ "$FOLDER_SOURCE" = "" ]; then
 	echo "Folder Source parameter is empty. EXIT"
 	exit 1
@@ -370,6 +309,132 @@ fi
 if [ "$NAME_PART" = "" ]; then
 	echo "Copy $mode Name Part parameter is empty. EXIT"
 	exit 1
+fi
+
+if [ "$MODE_SWITCH" -gt '1' ] ||
+   [[ ! $MODE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Recreate Folder Switch parameter $MODE_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$FOLDER_DEEP" = "" ] || \
+   [ "$FOLDER_DEEP" -gt '2' ] || \
+   [ "$FOLDER_DEEP" -eq '0' ]; then
+   		echo "Folder Deep Value $FOLDER_DEEP is too high, 0 or empty. Set to Default 1"
+		FOLDER_DEEP=1
+fi
+
+if [ "$SCRIPT_PATH" = "" ]; then
+        echo "Script Path parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ "$SCRIPT_SUB_FILE_PID_CREATE" = "" ]; then
+        echo "Script Sub file rename parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ "$SCRIPT_SUB_FILE_PID_RM" = "" ]; then
+        echo "Script Sub file remove parameter is empty. EXIT"
+        exit 2
+fi
+
+if [ "$CONFIG_SWITCH" -gt '1' ] ||
+   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$OUTPUT_SWITCH" -gt '1' ] ||
+   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+if [ "$VERBOSE_SWITCH" -gt '1' ] ||
+   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
+        exit 2
+fi
+
+## Check folder sources and targets in PID file
+string_tmp="$SCRIPT_PATH$SCRIPT_SUB_FILE_PID_CREATE"
+echo "string_tmp $string_tmp"
+# shellcheck disable=SC1090
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_CREATE" \
+	"$PID_PATH_FULL" \
+	"$$" \
+	"$FOLDER_SOURCE" \
+	"$FOLDER_TARGET" \
+	"$SYS_LOG" \
+	"$JOB_LOG" \
+	"$CONFIG_SWITCH" \
+	"$OUTPUT_SWITCH" \
+	"$VERBOSE_SWITCH"
+
+## Check last task for error(s)
+status=$?
+if [ $status != 0 ]; then
+	echo "Error with PID $PID_PATH_FULL and Check Copying from Folder Source $FOLDER_SOURCE \
+	to Folder Target $FOLDER_TARGET, code="$status
+
+	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+		echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+	fi
+	exit $status
+
+else
+
+	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+		echo "Checking PID $PID_PATH_FULL and Copying from Folder Source $FOLDER_SOURCE \
+		to Folder Target $FOLDER_TARGET finished"
+	fi
+
+fi
+
+## Remove PID from PID file when job is finished
+echo "When job is done clean from PID $PID_PATH_FULL PID Process ID $$ entry"
+string_tmp="$SCRIPT_PATH$SCRIPT_SUB_FILE_PID_RM"
+echo "string_tmp $string_tmp"
+#echo ". $string_tmp \
+#	$PID_PATH_FULL \
+#	$$ \
+#	$CONFIG_SWITCH \
+#	$OUTPUT_SWITCH \
+#	$VERBOSE_SWITCH" \
+#	> "$string_tmp"
+#trap '. -- $string_tmp " \
+#	'"$PID_PATH_FULL"' \
+#	'$$' \
+#	'"$CONFIG_SWITCH"' \
+#	'"$OUTPUT_SWITCH"' \
+#	'"$VERBOSE_SWITCH"' ' EXIT
+
+sh "$SCRIPT_PATH""$SCRIPT_SUB_FILE_PID_RM" \
+	"$PID_PATH_FULL" \
+	"$$" \
+	"$SYS_LOG" \
+	"$JOB_LOG" \
+	"$CONFIG_SWITCH" \
+	"$OUTPUT_SWITCH" \
+	"$VERBOSE_SWITCH"
+
+## Check last task for error(s)
+status=$?
+if [ $status != 0 ]; then
+	echo "Error with PID $PID_PATH_FULL and finding PID Process ID $PID_PROCESS_ID, code=$status";
+
+	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+		echo "!!! Sub Module $file_name_full v$version stopped with error(s) !!!"
+	fi
+
+	exit $status
+else
+
+	if [ "$VERBOSE_SWITCH" -eq '1' ]; then
+		echo "Removing entry in PID $PID_PATH_FULL with PID Process ID $PID_PROCESS_ID finished"
+	fi
+
 fi
 
 ## Lets roll

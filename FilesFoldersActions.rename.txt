@@ -5,7 +5,8 @@ sh FilesFoldersActions.rename.sh \
    "0" \
    "1" \
    "0" \
-   "/var/log/bash/$file_name.log" \
-   "/tmp/bash/$file_name.log" \
+   "/tmp/bash/FilesFoldersActions/${file_name}_sys.log" \
+   "/tmp/bash/FilesFoldersActions/${file_name}_job.log" \
+   "0" \
    "0" \
    "1"
