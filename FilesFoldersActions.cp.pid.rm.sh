@@ -10,9 +10,11 @@
 ## Parameter  2: PID i.e.               "54895"
 ## Parameter  3: Sys log i.e.           "/var/log/bash/$file_name.log"
 ## Parameter  4: Job log i.e.           "/tmp/bash/$file_name.log"
-## Parameter  5: Output Switch          0=Console
+## Parameter  5: Config Switch          0=Parameters; Default
+##                                      1=Config file
+## Parameter  6: Output Switch          0=Console
 ##                                      1=Logfile; Default
-## Parameter  6: Verbose Switch         0=Off
+## Parameter  7: Verbose Switch         0=Off
 ##                                      1=On; Default
 ##
 ## Call it like this:
@@ -20,6 +22,7 @@
 ##      "/var/run/FilesFoldersActions.cp.pid.rm.pid" \
 ##      "12345" "/var/log/bash/$file_name.log" \
 ##      "/tmp/bash/$file_name.log" \
+##      "0" \
 ##      "0" \
 ##      "1"
 
@@ -58,6 +61,7 @@ declare    PID_PATH_FULL
 declare -i PID
 declare    SYS_LOG
 declare    JOB_LOG
+declare -i CONFIG_SWITCH
 declare -i OUTPUT_SWITCH
 declare -i VERBOSE_SWITCH
 ## Clear used stuff
@@ -75,18 +79,21 @@ PID_PATH_FULL=$1
 PID=$2
 SYS_LOG=$3
 JOB_LOG=$4
-OUTPUT_SWITCH=$5
-VERBOSE_SWITCH=$6
+CONFIG_SWITCH=$5
+OUTPUT_SWITCH=$6
+VERBOSE_SWITCH=$7
 
-## Set the job config FILE from parameter
-config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
-echo "Using config file $config_file_in for $file_name_full"
+if [ $CONFIG_SWITCH -eq '1' ]; then
+        ## Set the job config FILE from parameter
+        config_file_in="$HOME/bin/linux/shell/local/FilesFoldersActions/$file_name.conf.in"
+        echo "Using config file $config_file_in for $file_name_full"
 
-## Import stuff from config file
-set -o allexport
-# shellcheck source=$config_file_in disable=SC1091
-. "$config_file_in"
-set +o allexport
+        ## Import stuff from config file
+        set -o allexport
+        # shellcheck source=$config_file_in disable=SC1091
+        . "$config_file_in"
+        set +o allexport
+fi
 
 # Check if $run_as_user_name:$run_as_group_name have write access to log file(s)
 if [ "$OUTPUT_SWITCH" -eq '1' ]; then
