@@ -306,26 +306,26 @@ if [ ! -d "$FOLDER_TARGET" ]; then
 	exit 1
 fi
 
-if [ "$MODE_SWITCH" -gt '1' ] ||
-   [[ ! $MODE_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$MODE_SWITCH" -gt '2' ] || \
+   [[ $MODE_SWITCH =~ [^[:digit:]] ]]; then
         echo "Config Switch parameter $MODE_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
-if [ "$CONFIG_SWITCH" -gt '1' ] ||
-   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$CONFIG_SWITCH" -gt '1' ] || \
+   [[ $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
         echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
-if [ "$OUTPUT_SWITCH" -gt '1' ] ||
-   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$OUTPUT_SWITCH" -gt '1' ] || \
+   [[ $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
         echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
-if [ "$VERBOSE_SWITCH" -gt '1' ] ||
-   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$VERBOSE_SWITCH" -gt '1' ] || \
+   [[ $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
         echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
         exit 2
 fi

@@ -340,9 +340,9 @@ if [ "$FOLDER_DEEP" = "" ]; then
         exit 2
 fi
 
-if [ "$MODE_SWITCH" -gt '1' ] ||
-   [[ ! $MODE_SWITCH =~ [^[:digit:]] ]]; then
-        echo "Recreate Folder Switch parameter $MODE_SWITCH is not a valid. EXIT"
+if [ "$MODE_SWITCH" -gt '2' ] || \
+   [[ $MODE_SWITCH =~ [^[:digit:]] ]]; then
+        echo "Mode Switch parameter $MODE_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
@@ -361,8 +361,8 @@ if [ "$SCRIPT_SUB_FILE_RM" = "" ]; then
         exit 2
 fi
 
-if [ "$RECREATE_FOLDER_SWITCH" -gt '1' ] ||
-   [[ ! $RECREATE_FOLDER_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$RECREATE_FOLDER_SWITCH" -gt '1' ] || \
+   [[ $RECREATE_FOLDER_SWITCH =~ [^[:digit:]] ]]; then
         echo "Recreate Folder Switch parameter $RECREATE_FOLDER_SWITCH is not a valid. EXIT"
         exit 2
 fi
@@ -377,20 +377,20 @@ if [ ! -d "$SCRIPT_PATH" ]; then
         exit 2
 fi
 
-if [ "$CONFIG_SWITCH" -gt '1' ] ||
-   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$CONFIG_SWITCH" -gt '1' ] || \
+   [[ $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
         echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
-if [ "$OUTPUT_SWITCH" -gt '1' ] ||
-   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$OUTPUT_SWITCH" -gt '1' ] || \
+   [[ $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
         echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
-if [ "$VERBOSE_SWITCH" -gt '1' ] ||
-   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$VERBOSE_SWITCH" -gt '1' ] || \
+   [[ $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
         echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
         exit 2
 fi

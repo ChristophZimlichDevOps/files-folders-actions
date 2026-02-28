@@ -285,8 +285,8 @@ if [ "$NAME_PART" = "" ]; then
 	exit 1
 fi
 
-if [ "$MODE_SWITCH" -gt '1' ] ||
-   [[ ! $MODE_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$MODE_SWITCH" -gt '2' ] || \
+   [[ $MODE_SWITCH =~ [^[:digit:]] ]]; then
         echo "Mode Switch parameter $MODE_SWITCH is not a valid. EXIT"
         exit 2
 fi
@@ -298,20 +298,20 @@ if [ "$FOLDER_DEEP" = "" ] || \
 		FOLDER_DEEP=1
 fi
 
-if [ "$CONFIG_SWITCH" -gt '1' ] ||
-   [[ ! $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$CONFIG_SWITCH" -gt '1' ] || \
+   [[ $CONFIG_SWITCH =~ [^[:digit:]] ]]; then
         echo "Config Switch parameter $CONFIG_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
-if [ "$OUTPUT_SWITCH" -gt '1' ] ||
-   [[ ! $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$OUTPUT_SWITCH" -gt '1' ] || \
+   [[ $OUTPUT_SWITCH =~ [^[:digit:]] ]]; then
         echo "Output Switch parameter $OUTPUT_SWITCH is not a valid. EXIT"
         exit 2
 fi
 
-if [ "$VERBOSE_SWITCH" -gt '1' ] ||
-   [[ ! $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
+if [ "$VERBOSE_SWITCH" -gt '1' ] || \
+   [[ $VERBOSE_SWITCH =~ [^[:digit:]] ]]; then
         echo "Verbose Switch parameter $VERBOSE_SWITCH is not a valid. EXIT"
         exit 2
 fi
@@ -319,7 +319,7 @@ fi
 ## Lets roll
 ## If name_part is no pure 10 digit as timestamp
 if [ ${#NAME_PART} -gt '7' ] || \
-   [[ ! $NAME_PART =~ [^[:digit:]] ]]; then
+   [[ $NAME_PART =~ [^[:digit:]] ]]; then
 		operation_mode_switch=0
 
 		readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" )
