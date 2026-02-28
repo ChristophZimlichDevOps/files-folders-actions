@@ -115,7 +115,7 @@ if [ $CONFIG_SWITCH -eq '1' ]; then
 	## Import stuff from config file
 	set -o allexport
 	# shellcheck source=$config_file_in disable=SC1091
-	. "$config_file_in"
+	. "$config_file_in" 
 	set +o allexport
 fi
 
@@ -135,9 +135,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${SYS_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${SYS_LOG%/*}"
+                        mkdir -pv "${SYS_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${SYS_LOG%/*}"
+                        mkdir -p "${SYS_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 sys_log_folder_missing_switch=1
@@ -151,9 +151,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${JOB_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${JOB_LOG%/*}"
+                        mkdir -pv "${JOB_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${JOB_LOG%/*}"
+                        mkdir -p "${JOB_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 job_log_folder_missing_switch=1
@@ -174,12 +174,12 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	# Set log files
 	if [ ! -f "$SYS_LOG" ]; then
 		sys_log_file_missing_switch=1
-		touch "$SYS_LOG"
+		touch "$SYS_LOG" &> "$JOB_LOG"
 	fi
 
 	if [ ! -f "$JOB_LOG" ]; then
 		job_log_file_missing_switch=1
-		touch "$JOB_LOG"
+		touch "$JOB_LOG" &> "$JOB_LOG"
 	fi
 
 	# Mod Output
@@ -314,9 +314,9 @@ if [ ! -d "$FOLDER_TARGET" ]; then
 	fi
 
 	if [ $VERBOSE_SWITCH -eq '1' ]; then
-		mkdir -pv "$FOLDER_TARGET"
+		mkdir -pv "$FOLDER_TARGET" &> "$JOB_LOG"
 	else
-		mkdir -p "$FOLDER_TARGET"
+		mkdir -p "$FOLDER_TARGET" &> "$JOB_LOG"
 	fi
 fi
 
@@ -407,8 +407,8 @@ else
 fi
 
 ## Lets roll
-readarray -t files < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART")
-readarray -t folders < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART")
+readarray -t files < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART") &> "$JOB_LOG"
+readarray -t folders < <(find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART") &> "$JOB_LOG"
 
 if [ $MODE_SWITCH -lt '2' ]; then
 	if [ ${#files[@]} -eq '0' ]; then
@@ -424,10 +424,10 @@ if [ $MODE_SWITCH -lt '2' ]; then
 		done
 		echo "Copying file(s) from $FOLDER_SOURCE to $FOLDER_TARGET with name like $NAME_PART started"
 		find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
-			-exec cp -fv {} "$FOLDER_TARGET" ";"
+			-exec cp -fv {} "$FOLDER_TARGET" ";" &> "$JOB_LOG"
 	else
         find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
-			-exec cp -f {} "$FOLDER_TARGET" ";"
+			-exec cp -f {} "$FOLDER_TARGET" ";" &> "$JOB_LOG"
 	fi
 
 	## Check last task for error(s)
@@ -461,10 +461,10 @@ if [ $MODE_SWITCH -gt '0' ]; then
 		done
 		echo "Copying folder(s) from $FOLDER_SOURCE to $FOLDER_TARGET with name like $NAME_PART started"
 		find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-			-exec cp -rfv {} "$FOLDER_TARGET" ";"
+			-exec cp -rfv {} "$FOLDER_TARGET" ";" &> "$JOB_LOG"
 	else
         find "$FOLDER_SOURCE" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-			-exec cp -rf {} "$FOLDER_TARGET" ";"
+			-exec cp -rf {} "$FOLDER_TARGET" ";" &> "$JOB_LOG"
 	fi
 
 	## Check last task for error(s)

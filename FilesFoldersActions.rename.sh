@@ -105,7 +105,7 @@ if [ $CONFIG_SWITCH -eq '1' ]; then
 	## Import stuff from config FILE
 	set -o allexport
 	# shellcheck source=$config_file_in disable=SC1091
-	. "$config_file_in"
+	. "$config_file_in" 
 	set +o allexport
 fi
 
@@ -125,9 +125,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${SYS_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${SYS_LOG%/*}"
+                        mkdir -pv "${SYS_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${SYS_LOG%/*}"
+                        mkdir -p "${SYS_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 sys_log_folder_missing_switch=1
@@ -141,9 +141,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${JOB_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${JOB_LOG%/*}"
+                        mkdir -pv "${JOB_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${JOB_LOG%/*}"
+                        mkdir -p "${JOB_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 job_log_folder_missing_switch=1
@@ -164,12 +164,12 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	# Set log files
 	if [ ! -f "$SYS_LOG" ]; then
 		sys_log_file_missing_switch=1
-		touch "$SYS_LOG"
+		touch "$SYS_LOG" &> "$JOB_LOG"
 	fi
 
 	if [ ! -f "$JOB_LOG" ]; then
 		job_log_file_missing_switch=1
-		touch "$JOB_LOG"
+		touch "$JOB_LOG" &> "$JOB_LOG"
 	fi
 
 	# Mod Output
@@ -370,7 +370,7 @@ fi
 ## Start renaming all file(s) in array
 if [ $MODE_SWITCH -lt '2' ]; then
 
-	readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD")
+	readarray -t files < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD") &> "$JOB_LOG"
 	
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
 		if [ ${#files[@]} -eq '0' ]; then
@@ -388,10 +388,10 @@ if [ $MODE_SWITCH -lt '2' ]; then
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
 		echo "Starting renaming file(s) at Folder Target $FOLDER_TARGET with $NAME_PART_OLD to $NAME_PART_NEW..."
 		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" \
-			-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+			-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} ";" &> "$JOB_LOG"
 	else
 		find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART_OLD" \
-			-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+			-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} ";" &> "$JOB_LOG"
 	fi
 
 	## Check last task for errors
@@ -410,7 +410,7 @@ fi
 ## Start renaming all folder(s) in array
 if [ $MODE_SWITCH -gt '0' ]; then
 
-	readarray -t folders < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD")
+	readarray -t folders < <(find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD") &> "$JOB_LOG"
 	
 	if [ $VERBOSE_SWITCH -eq '1'  ]; then
 		if [ ${#folders[@]} -eq '0' ]; then
@@ -430,23 +430,23 @@ if [ $MODE_SWITCH -gt '0' ]; then
 		if [ $FOLDER_RECREATE_SWITCH -eq '1'  ]; then
 
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
-				-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} \; -exec mkdir -pv {} ";"
+				-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} \; -exec mkdir -pv {} ";" &> "$JOB_LOG"
 
 		else
 
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
-				-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+				-exec rename -v "$name_part_old_clean" "$NAME_PART_NEW" {} ";" &> "$JOB_LOG"
 		fi
 	else
 		if [ $FOLDER_RECREATE_SWITCH -eq '1'  ]; then
 
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
-				-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} \; -exec mkdir -p {} ";"
+				-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} \; -exec mkdir -p {} ";" &> "$JOB_LOG"
 
 		else
 
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART_OLD" \
-				-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} ";"
+				-exec rename "$name_part_old_clean" "$NAME_PART_NEW" {} ";" &> "$JOB_LOG"
 		fi
 	fi
 

@@ -91,7 +91,7 @@ if [ $CONFIG_SWITCH -eq '1' ]; then
         ## Import stuff from config file
         set -o allexport
         # shellcheck source=$config_file_in disable=SC1091
-        . "$config_file_in"
+        . "$config_file_in" 
         set +o allexport
 fi
 
@@ -111,9 +111,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${SYS_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${SYS_LOG%/*}"
+                        mkdir -pv "${SYS_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${SYS_LOG%/*}"
+                        mkdir -p "${SYS_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 sys_log_folder_missing_switch=1
@@ -127,9 +127,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${JOB_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${JOB_LOG%/*}"
+                        mkdir -pv "${JOB_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${JOB_LOG%/*}"
+                        mkdir -p "${JOB_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 job_log_folder_missing_switch=1
@@ -150,12 +150,12 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	# Set log files
 	if [ ! -f "$SYS_LOG" ]; then
 		sys_log_file_missing_switch=1
-		touch "$SYS_LOG"
+		touch "$SYS_LOG" &> "$JOB_LOG"
 	fi
 
 	if [ ! -f "$JOB_LOG" ]; then
 		job_log_file_missing_switch=1
-		touch "$JOB_LOG"
+		touch "$JOB_LOG" &> "$JOB_LOG"
 	fi
 
 	# Mod Output
@@ -324,7 +324,7 @@ else
 		## Removing PID entry in PID file
 
                 #trap 'sed -i -- '/'$PID'/d' $PID_PATH_FULL'  exit
-                sed -i -- '/'$PID'/d' "$PID_PATH_FULL"
+                sed -i -- '/'$PID'/d' "$PID_PATH_FULL" &> "$JOB_LOG"
                 ## Check last task for errors
                 status=$?
                 if [ $status != 0 ]; then
@@ -333,23 +333,23 @@ else
                         exit $status
                 else
                         ## Check if the job has worked correctly
-                        readarray -t pids_tmp < <(cat "$PID_PATH_FULL" | grep $PID)
+                        readarray -t pids_tmp < <(cat "$PID_PATH_FULL" | grep $PID) &> "$JOB_LOG"
                         if [ ${#pids_tmp[@]} -eq '0' ]; then
                                 if [ $VERBOSE_SWITCH -eq '1' ]; then
                                         echo "Removing entry in PID File $PID_PATH_FULL with PID $PID finished successfully"
                                 fi
                         fi
 			## Check if PID file has more content
-                        readarray -t pids_tmp < <(cat "$PID_PATH_FULL")
+                        readarray -t pids_tmp < <(cat "$PID_PATH_FULL") &> "$JOB_LOG"
                 	if [ ${#pids_tmp[@]} -eq '0' ]; then
                         	## If PID file is empty
 				if [ $VERBOSE_SWITCH -eq '1' ]; then 
                                         echo "$PID_PATH_FULL is now empty... Deleting it"
 					#trap 'rm -f -v -- $PID_PATH_FULL' EXIT #exit 0
-                                        rm -f -v "$PID_PATH_FULL"
+                                        rm -f -v "$PID_PATH_FULL" &> "$JOB_LOG"
 				else
 					#trap 'rm -f -- $PID_PATH_FULL' EXIT #exit 0
-                                        rm -f "$PID_PATH_FULL"
+                                        rm -f "$PID_PATH_FULL" &> "$JOB_LOG"
 				fi
                 		## Check last task for errors
                 		status=$?

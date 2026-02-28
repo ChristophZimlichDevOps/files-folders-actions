@@ -153,9 +153,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${SYS_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${SYS_LOG%/*}"
+                        mkdir -pv "${SYS_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${SYS_LOG%/*}"
+                        mkdir -p "${SYS_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 sys_log_folder_missing_switch=1
@@ -169,9 +169,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${JOB_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${JOB_LOG%/*}"
+                        mkdir -pv "${JOB_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${JOB_LOG%/*}"
+                        mkdir -p "${JOB_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 job_log_folder_missing_switch=1
@@ -192,12 +192,12 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	# Set log files
 	if [ ! -f "$SYS_LOG" ]; then
 		sys_log_file_missing_switch=1
-		touch "$SYS_LOG"
+		touch "$SYS_LOG" &> "$JOB_LOG"
 	fi
 
 	if [ ! -f "$JOB_LOG" ]; then
 		job_log_file_missing_switch=1
-		touch "$JOB_LOG"
+		touch "$JOB_LOG" &> "$JOB_LOG"
 	fi
 
 	# Mod Output

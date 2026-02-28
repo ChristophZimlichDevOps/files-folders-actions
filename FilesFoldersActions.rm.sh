@@ -115,7 +115,7 @@ if [ $CONFIG_SWITCH -eq '1' ]; then
 	## Import stuff from config FILE
 	set -o allexport
 	# shellcheck source=$config_file_in disable=SC1091
-	. "$config_file_in"
+	. "$config_file_in" 
 	set +o allexport
 fi
 
@@ -135,9 +135,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${SYS_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${SYS_LOG%/*}"
+                        mkdir -pv "${SYS_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${SYS_LOG%/*}"
+                        mkdir -p "${SYS_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 sys_log_folder_missing_switch=1
@@ -151,9 +151,9 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 
         if [ ! -d "${JOB_LOG%/*}" ]; then       
                 if [ $VERBOSE_SWITCH -eq '1' ]; then
-                        mkdir -pv "${JOB_LOG%/*}"
+                        mkdir -pv "${JOB_LOG%/*}" &> "$JOB_LOG"
                 else
-                        mkdir -p "${JOB_LOG%/*}"
+                        mkdir -p "${JOB_LOG%/*}" &> "$JOB_LOG"
                 fi
 
                 job_log_folder_missing_switch=1
@@ -174,12 +174,12 @@ if [ "$OUTPUT_SWITCH" -eq '1' ]; then
 	# Set log files
 	if [ ! -f "$SYS_LOG" ]; then
 		sys_log_file_missing_switch=1
-		touch "$SYS_LOG"
+		touch "$SYS_LOG" &> "$JOB_LOG"
 	fi
 
 	if [ ! -f "$JOB_LOG" ]; then
 		job_log_file_missing_switch=1
-		touch "$JOB_LOG"
+		touch "$JOB_LOG" &> "$JOB_LOG"
 	fi
 
 	# Mod Output
@@ -347,8 +347,8 @@ if [ ${#NAME_PART} -gt '7' ] || \
    [[ $NAME_PART =~ [^[:digit:]] ]]; then
 		operation_mode_switch=0
 
-		readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" )
-		readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" )
+		readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" ) &> "$JOB_LOG"
+		readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" ) &> "$JOB_LOG"
 
 else
 		if [ "$(echo "$NAME_PART" | rev | cut -b 1)" != "*" ]; then
@@ -374,8 +374,8 @@ else
 			date_tmp_1="\"?${date_year}01[1-$date_day]*"\"
 			date_tmp_2="\"?[0-$((date_year-1))?[1-12][1-31]*"\"
 
-			readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) )
-			readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) )
+			readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) ) &> "$JOB_LOG"
+			readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) ) &> "$JOB_LOG"
 
 		else
 			## If months is not January
@@ -393,8 +393,8 @@ else
 				echo "date_tmp_3 $date_tmp_3"
 			fi
 	
-			readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) )
-			readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) )
+			readarray -t files < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) ) &> "$JOB_LOG"
+			readarray -t folders < <( find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) ) &> "$JOB_LOG"
 		fi
 fi
 
@@ -422,33 +422,33 @@ if [ "$MODE_SWITCH" -lt '2' ]; then
 
 		if [ $operation_mode_switch -eq '0' ]; then
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
-				-exec rm -f -v --interactive=never {} ";"
+				-exec rm -f -v --interactive=never {} ";" &> "$JOB_LOG"
 		fi
 
 		if [ $operation_mode_switch -eq '1' ]; then
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
-				-exec rm -f -v --interactive=never {} ";"
+				-exec rm -f -v --interactive=never {} ";" &> "$JOB_LOG"
 		fi
 
 		if [ $operation_mode_switch -eq '2' ]; then
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
-				-exec rm -f -v --interactive=never {} ";"
+				-exec rm -f -v --interactive=never {} ";" &> "$JOB_LOG"
 		fi
 
 	else
 		if [ $operation_mode_switch -eq '0' ]; then
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f -name "$NAME_PART" \
-				-exec rm -f --interactive=never {} ";"
+				-exec rm -f --interactive=never {} ";" &> "$JOB_LOG"
 		fi
 
 		if [ $operation_mode_switch -eq '1' ]; then
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
-				-exec rm -f --interactive=never {} ";"
+				-exec rm -f --interactive=never {} ";" &> "$JOB_LOG"
 		fi
 
 		if [ $operation_mode_switch -eq '2' ]; then
 			find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type f \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
-				-exec rm -f --interactive=never {} ";"
+				-exec rm -f --interactive=never {} ";" &> "$JOB_LOG"
 		fi
 	fi
 fi
@@ -489,12 +489,12 @@ if [ "$MODE_SWITCH" -gt '0' ]; then
 			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";"
+					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";" &> "$JOB_LOG"
 
 			else
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-					-exec rmdir -v --ignore-fail-on-non-empty {} ";"
+					-exec rmdir -v --ignore-fail-on-non-empty {} ";" &> "$JOB_LOG"
 			fi
 		fi
 
@@ -502,11 +502,11 @@ if [ "$MODE_SWITCH" -gt '0' ]; then
 			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
-					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";"
+					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";" &> "$JOB_LOG"
 
 			else
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
-					-exec rmdir -v --ignore-fail-on-non-empty {} ";"
+					-exec rmdir -v --ignore-fail-on-non-empty {} ";" &> "$JOB_LOG"
 			fi
 		fi
 
@@ -514,12 +514,12 @@ if [ "$MODE_SWITCH" -gt '0' ]; then
 			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
-					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";"
+					-exec rmdir -v --ignore-fail-on-non-empty {} \; -exec mkdir -pv {} ";" &> "$JOB_LOG"
 
 			else
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
-					-exec rmdir -v --ignore-fail-on-non-empty {} ";"
+					-exec rmdir -v --ignore-fail-on-non-empty {} ";" &> "$JOB_LOG"
 
 			fi
 		fi
@@ -530,12 +530,12 @@ if [ "$MODE_SWITCH" -gt '0' ]; then
 			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";"
+					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";" &> "$JOB_LOG"
 
 			else
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d -name "$NAME_PART" \
-					-exec rmdir --ignore-fail-on-non-empty {} ";"
+					-exec rmdir --ignore-fail-on-non-empty {} ";" &> "$JOB_LOG"
 
 			fi
 		fi
@@ -544,12 +544,12 @@ if [ "$MODE_SWITCH" -gt '0' ]; then
 			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
-					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";"
+					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";" &> "$JOB_LOG"
 
 			else
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" \) \
-					-exec rmdir --ignore-fail-on-non-empty {} ";"
+					-exec rmdir --ignore-fail-on-non-empty {} ";" &> "$JOB_LOG"
 			fi
 		fi
 
@@ -557,12 +557,12 @@ if [ "$MODE_SWITCH" -gt '0' ]; then
 			if [ "$FOLDER_RECREATE_SWITCH" -eq '1' ]; then
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
-					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";"
+					-exec rmdir --ignore-fail-on-non-empty {} \; -exec mkdir -p {} ";" &> "$JOB_LOG"
 
 			else
 
 				find "$FOLDER_TARGET" -maxdepth "$FOLDER_DEEP" -type d \( -name "$date_tmp_1" -o -name "$date_tmp_2" -o -name "$date_tmp_3" \) \
-					-exec rmdir --ignore-fail-on-non-empty {} ";"
+					-exec rmdir --ignore-fail-on-non-empty {} ";" &> "$JOB_LOG"
 
 			fi
 		fi	
