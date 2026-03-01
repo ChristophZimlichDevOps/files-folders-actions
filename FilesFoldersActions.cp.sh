@@ -13,15 +13,16 @@
 ## Parameter  5: Copy Mode Switch   0=Copy only files
 ##                                  1=Copy files and folders
 ##                                  2=Copy only folders
-## Parameter  6: Script path i.e.   "$HOME/bin/linux/bash/FilesFoldersActions/"
-## Parameter  7: Sub Script for creating PID i.e. "FilesFoldersActions.cp.pid.create.sh"
-## Parameter  8: Sub Script for removing PID i.e. "FilesFoldersActions.cp.pid.rm.sh"
-## Parameter  9: Sys log i.e.		"/var/log/bash/$file_name.log"
-## Parameter 10: Job log i.e.		"/tmp/bash/$file_name.log"
-## Parameter 11: Config Switch      0=Parameters; Default
+## Parameter  6: Folder Deep where File(s) and Folder(s) get found; Default 1
+## Parameter  7: Script path i.e.   "$HOME/bin/linux/bash/FilesFoldersActions/"
+## Parameter  8: Sub Script for creating PID i.e. "FilesFoldersActions.cp.pid.create.sh"
+## Parameter  9: Sub Script for removing PID i.e. "FilesFoldersActions.cp.pid.rm.sh"
+## Parameter 10: Sys log i.e.		"/var/log/bash/$file_name.log"
+## Parameter 11: Job log i.e.		"/tmp/bash/$file_name.log"
+## Parameter 12: Config Switch      0=Parameters; Default
 ##                                  1=Config file
-## Parameter 12: Verbose Switch     0=Off
-##                                  1=On; Default
+## Parameter 13: Verbose Switch     0=Off; Default
+##                                  1=On
 ##
 ## Call it like this:
 ## sh FilesFoldersActions.cp.sh \

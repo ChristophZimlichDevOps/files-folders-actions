@@ -14,8 +14,8 @@
 ## Parameter  6: Job log i.e.           "/tmp/bash/$file_name.log"
 ## Parameter  7: Config Switch          0=Parameters; Default
 ##                                      1=Config file
-## Parameter  8: Verbose Switch         0=Off
-##                                      1=On; Default
+## Parameter  8: Verbose Switch         0=Off; Default
+##                                      1=On
 ##
 ## Call it like this:
 ## sh FilesFoldersActions.cp.pid.create.sh \

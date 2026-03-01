@@ -12,15 +12,15 @@
 ## Parameter  4: Rename Mode Switch		0=Only files
 ##                             			1=Files and Folders
 ##                             			2=Only Folders
-## Parameter  5: Rename Folder Deep "1"=Deep of the the folder(s) where file(s) and folder(s) can be find to rename. MAX VALUE IS 2 for security reason
+## Parameter  5: Folder Deep where File(s) and Folder(s) get found; Default 1
 ## Parameter  6: Recreate Folder Switch	0=Off
 ##                                     	1=On
 ## Parameter  7: Sys log i.e. 			"/var/log/bash/$file_name.log"
 ## Parameter  8: Job log i.e. 			"/tmp/bash/$file_name.log"
 ## Parameter  9: Config Switch          0=Parameters; Default
 ##                                      1=Config file
-## Parameter 10: Verbose Switch     	0=Off
-##                                  	1=On; Default
+## Parameter 10: Verbose Switch     	0=Off; Default
+##                                  	1=On
 ##
 ## Call it like this:
 ## sh FilesFoldersActions.rename.sh \
