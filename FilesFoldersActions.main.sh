@@ -127,6 +127,13 @@ run_as_group_name=$(id -gn "$run_as_user_name")
 run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
+## Check this script is running as root !
+#if [ "$run_as_user_uid" != "0" ]; then
+#    func_output_optimizer "w" "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
+#    func_output_optimizer "w" "!!! ATTENTION !!!		           TO USE chown AND chmod IN rsync	                !!! ATTENTION !!!"
+#    func_output_optimizer "w" "!!! ATTENTION !!!		     ABORT THIS SCRIPT IF YOU NEED THIS FEATURES		!!! ATTENTION !!!"
+#fi
+
 ## Clear used stuff
 declare    PID_PATH_FULL
 declare    FOLDER_SOURCE
@@ -174,25 +181,18 @@ JOB_LOG=${16}
 CONFIG_SWITCH=${17}
 VERBOSE_SWITCH=${18}
 
-#if [ "$2" = "" ]; then
-        ## Set the job config FILE from parameter
+if [ "$2" = "" ]; then
+        ## Set the job config file from parameter
         #config_file_in=$1
         config_file_in="$HOME/bin/linux/bash/local/FilesFoldersActions/FilesFoldersActions.main.conf.in"
         func_output_optimizer "i" "Using config file $config_file_in for $file_name_full"
 
-        ## Import stuff from config FILE
+        ## Import stuff from config file
         set -o allexport
         # shellcheck disable=SC1090
         . "$config_file_in"
         set +o allexport
-#fi
-
-## Check this script is running as root !
-#if [ "$run_as_user_uid" != "0" ]; then
-#    func_output_optimizer "w" "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
-#    func_output_optimizer "w" "!!! ATTENTION !!!		           TO USE chown AND chmod IN rsync	                !!! ATTENTION !!!"
-#    func_output_optimizer "w" "!!! ATTENTION !!!		     ABORT THIS SCRIPT IF YOU NEED THIS FEATURES		!!! ATTENTION !!!"
-#fi
+fi
 
 # Check if log files are set
 if [ "$SYS_LOG" = "" ]; then

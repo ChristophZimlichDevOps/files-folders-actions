@@ -116,6 +116,8 @@ run_on_hostname=$(hostname -f)
 ## Check this script is running as root !
 #if [ "$run_as_user_uid" != "0" ]; then
 #    func_output_optimizer "w" "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
+#    func_output_optimizer "w" "!!! ATTENTION !!!		           TO USE chown AND chmod IN rsync	                !!! ATTENTION !!!"
+#    func_output_optimizer "w" "!!! ATTENTION !!!		     ABORT THIS SCRIPT IF YOU NEED THIS FEATURES		    !!! ATTENTION !!!"
 #fi
 
 ## Clear used stuff
@@ -153,7 +155,7 @@ JOB_LOG=$8
 CONFIG_SWITCH=$9
 VERBOSE_SWITCH=${10}
 
-#if [ $CONFIG_SWITCH -eq '1' ]; then 
+if [ $CONFIG_SWITCH -eq '1' ]; then 
 	## Set the job config FILE from parameter
 	config_file_in="$HOME/bin/linux/bash/local/FilesFoldersActions/$file_name.conf.in"
 	func_output_optimizer "i" "Using config file $config_file_in for $file_name_full"
@@ -163,7 +165,7 @@ VERBOSE_SWITCH=${10}
 	# shellcheck source=$config_file_in disable=SC1091
 	. "$config_file_in" 
 	set +o allexport
-#fi
+fi
 
 # Check if log files are set
 if [ "$SYS_LOG" = "" ]; then

@@ -146,7 +146,7 @@ JOB_LOG=$6
 CONFIG_SWITCH=$7
 VERBOSE_SWITCH=$8
 
-#if [ $CONFIG_SWITCH -eq '1' ];then 
+if [ $CONFIG_SWITCH -eq '1' ];then 
         ## Set the job config file from parameter
         config_file_in="$HOME/bin/linux/bash/local/FilesFoldersActions/$file_name.conf.in"
         func_output_optimizer "i" "Using config file $config_file_in for $file_name_full"
@@ -156,7 +156,7 @@ VERBOSE_SWITCH=$8
         # shellcheck source=$config_file_in disable=SC1091
         . "$config_file_in" 
         set +o allexport
-#fi
+fi
 
 # Check if log files are set
 if [ "$SYS_LOG" = "" ]; then

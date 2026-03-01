@@ -111,9 +111,10 @@ run_as_group_gid=$(getent group "$run_as_group_name" | cut -d: -f3)
 run_on_hostname=$(hostname -f)
 
 ## Check this script is running as root !
-#if [ "$(id -u)" != "0" ]; then
-#	func_output_optimizer "i" "Aborting, this script needs to be run as root! EXIT"
-#	exit 1
+#if [ "$run_as_user_uid" != "0" ]; then
+#    func_output_optimizer "w" "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
+#    func_output_optimizer "w" "!!! ATTENTION !!!		           TO USE chown AND chmod IN rsync	                !!! ATTENTION !!!"
+#    func_output_optimizer "w" "!!! ATTENTION !!!		     ABORT THIS SCRIPT IF YOU NEED THIS FEATURES		    !!! ATTENTION !!!"
 #fi
 
 ## Only one instance of this script should ever be running and as its use is normally called via cron, if it's then run manually
@@ -164,7 +165,7 @@ JOB_LOG=$7
 CONFIG_SWITCH=$8
 VERBOSE_SWITCH=$9
 
-#if [ $CONFIG_SWITCH -eq '1' ]; then 
+if [ $CONFIG_SWITCH -eq '1' ]; then 
 	## Set the job config FILE from parameter
 	config_file_in="$HOME/bin/linux/bash/local/FilesFoldersActions/$file_name.conf.in"
 	func_output_optimizer "i" "Using config file $config_file_in for $file_name_full"
@@ -174,7 +175,7 @@ VERBOSE_SWITCH=$9
 	# shellcheck source=$config_file_in disable=SC1091
 	. "$config_file_in" 
 	set +o allexport
-#fi
+fi
 
 
 # Check if log files are set

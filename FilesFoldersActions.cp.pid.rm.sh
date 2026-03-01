@@ -110,9 +110,10 @@ if [ "$run_as_user_uid" != "0" ]; then
 fi
 
 ## Check this script is running as root !
-#if [ "$(id -u)" != "0" ]; then
-#        func_output_optimizer "i" "Aborting, this script needs to be run as root! EXIT"
-#        exit 1
+#if [ "$run_as_user_uid" != "0" ]; then
+#    func_output_optimizer "w" "!!! ATTENTION !!!		    YOU MUST RUN THIS SCRIPT AS ROOT / SUPERUSER	        !!! ATTENTION !!!"
+#    func_output_optimizer "w" "!!! ATTENTION !!!		           TO USE chown AND chmod IN rsync	                !!! ATTENTION !!!"
+#    func_output_optimizer "w" "!!! ATTENTION !!!		     ABORT THIS SCRIPT IF YOU NEED THIS FEATURES		    !!! ATTENTION !!!"
 #fi
 
 ## Clear used stuff
