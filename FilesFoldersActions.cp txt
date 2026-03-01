@@ -5,11 +5,10 @@ sh FilesFoldersActions.cp.sh \
 	"current*" \
 	"1" \
 	"1" \
-	"$HOME/bin/linux/shell/local/FilesFoldersActions/" \
+	"$HOME/bin/linux/bash/local/FilesFoldersActions/" \
 	"FilesFoldersActions.cp.pid.create.sh" \
 	"FilesFoldersActions.cp.pid.rm.sh" \
 	"/tmp/bash/FilesFoldersActions/$file_name/${file_name}_sys.log" \
 	"/tmp/bash/FilesFoldersActions/$file_name/${file_name}_job.log" \
-	"0" \
 	"0" \
 	"1"

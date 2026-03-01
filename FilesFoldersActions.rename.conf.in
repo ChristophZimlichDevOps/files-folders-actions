@@ -15,9 +15,7 @@
 ## Parameter  8: Job log i.e. 			"/tmp/bash/$file_name.log"
 ## Parameter  9: Config Switch          0=Parameters; Default
 ##                                      1=Config file
-## Parameter 10: Output Switch      	0=Console
-##                                  	1=Logfile; Default
-## Parameter 11: Verbose Switch     	0=Off
+## Parameter 10: Verbose Switch     	0=Off
 ##                                  	1=On; Default
 
 NAME_PART_OLD="current*"
@@ -25,9 +23,8 @@ NAME_PART_NEW="$(date +%y%m%d%H%S)"
 FOLDER_TARGET="/tmp/bash/FilesFoldersActions/"
 MODE_SWITCH=1
 FOLDER_DEEP=1
-FOLDER_RECREATE_SWITCH=1
+FOLDER_RECREATE_RENAME_SWITCH=1
 SYS_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.rename_sys.log"
 JOB_LOG="/tmp/bash/FilesFoldersActions/FilesFoldersActions.rename_job.log"
 CONFIG_SWITCH=0
-OUTPUT_SWITCH=0
 VERBOSE_SWITCH=1

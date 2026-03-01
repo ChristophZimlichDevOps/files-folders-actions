@@ -7,5 +7,4 @@
    "/tmp/bash/FilesFoldersActions/${file_name}_sys.log" \
    "/tmp/bash/FilesFoldersActions/${file_name}_job.log" \
     "0" \
-    "0" \
     "1"

@@ -11,8 +11,7 @@ sh FilesFoldersActions.main.sh \
     "FilesFoldersActions.rm.sh" \
     "1" \
     "1" \
-    "$HOME/bin/linux/shell/local/FilesFoldersActions/" \
+    "$HOME/bin/linux/bash/local/FilesFoldersActions/" \
     "/tmp/bash/FilesFoldersActions/${file_name}_sys.log" \
     "/tmp/bash/FilesFoldersActions/${file_name}_job.log" \
-    "0" \
     "1" 
